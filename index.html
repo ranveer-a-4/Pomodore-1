@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Focus - Ultra Pomodoro Dashboard</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --neo-base: #1e1b4b;
+            --neo-light: rgba(255, 255, 255, 0.05);
+            --neo-dark: rgba(0, 0, 0, 0.6);
+            
+            /* Multi-Color Claymorphism Accents */
+            --clay-pomodoro: #ff4757;
+            --clay-short: #2ed573;
+            --clay-long: #1e90ff;
+            --clay-purple: #9b59b6;
+            --clay-amber: #ffa502;
+            
+            /* Glassmorphism Configuration */
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(255, 255, 255, 0.15);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- DASHBOARD LAYOUT --- */
+        #app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            padding: 25px;
+            gap: 25px;
+        }
+
+        /* Neomorphic Navigation Sidebar */
+        sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 10px 10px 25px var(--neo-dark), -5px -5px 20px rgba(255,255,255,0.02);
+        }
+
+        .brand-zone {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .brand-zone h2 {
+            font-size: 24px;
+            background: linear-gradient(45deg, #ff4757, #9b59b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-grow: 1;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 15px 20px;
+            border-radius: 18px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--text-main);
+            background: var(--neo-base);
+            box-shadow: inset 3px 3px 7px var(--neo-dark), inset -3px -3px 7px var(--neo-light), 3px 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn.active {
+            border-left: 4px solid var(--clay-pomodoro);
+        }
+
+        /* Main Content View Frame */
+        main {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.02);
+            position: relative;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        .view-panel {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+            height: 100%;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- MODE CONTROLLER (CLAYMORPHISM) --- */
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .mode-btn {
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .mode-btn[data-mode="pomodoro"] { background: var(--clay-pomodoro); box-shadow: inset 2px 2px 6px rgba(255,255,255,0.4), inset -2px -2px 6px rgba(0,0,0,0.4); }
+        .mode-btn[data-mode="short"] { background: var(--clay-short); box-shadow: inset 2px 2px 6px rgba(255,255,255,0.4), inset -2px -2px 6px rgba(0,0,0,0.4); }
+        .mode-btn[data-mode="long"] { background: var(--clay-long); box-shadow: inset 2px 2px 6px rgba(255,255,255,0.4), inset -2px -2px 6px rgba(0,0,0,0.4); }
+
+        .mode-btn.active {
+            opacity: 1;
+            transform: scale(1.08);
+            box-shadow: inset 4px 4px 10px rgba(255,255,255,0.5), inset -4px -4px 10px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        /* --- JUMBO FLIP CLOCK DESIGN --- */
+        .clock-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 60px;
+        }
+
+        .flip-card {
+            position: relative;
+            width: 180px;
+            height: 240px;
+            background: rgba(30, 27, 75, 0.85);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 130px;
+            font-weight: 900;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .flip-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 5;
+        }
+
+        .clock-divider {
+            font-size: 100px;
+            font-weight: 900;
+            color: var(--text-muted);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* --- LIQUID GLASS CONTROLS --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+        }
+
+        .btn-liquid {
+            position: relative;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 18px 45px;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .btn-liquid::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: scale(0);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .btn-liquid:active::after {
+            transform: scale(1);
+        }
+
+        .btn-liquid:hover {
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px var(--glass-glow);
+            transform: translateY(-2px);
+        }
+
+        #btn-start { background: linear-gradient(135deg, rgba(46, 213, 115, 0.2), rgba(255,255,255,0.05)); border-color: rgba(46, 213, 115, 0.3); }
+        #btn-pause { background: linear-gradient(135deg, rgba(ffa502, 0.2), rgba(255,255,255,0.05)); border-color: rgba(ffa502, 0.3); }
+
+        /* --- TASK PAGE --- */
+        .tasks-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            height: 100%;
+        }
+
+        .task-input-zone {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .clay-input {
+            flex-grow: 1;
+            background: rgba(15, 23, 42, 0.4);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4), inset -3px -3px 6px rgba(255,255,255,0.02);
+            outline: none;
+        }
+
+        .btn-add-task {
+            background: var(--clay-purple);
+            border: none;
+            padding: 0 25px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: inset 2px 2px 5px rgba(255,255,255,0.3), 0 5px 15px rgba(155,89,182,0.4);
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 18px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+            border-color: rgba(46, 213, 115, 0.2);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            color: var(--text-muted);
+        }
+
+        .action-btn:hover { color: white; }
+
+        /* --- CALENDAR PAGE --- */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+
+        .calendar-day-name {
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 10px;
+        }
+
+        .calendar-cell {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            aspect-ratio: 1.2;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            font-weight: 600;
+        }
+
+        .calendar-cell.active-day {
+            background: rgba(155, 89, 182, 0.15);
+            border-color: var(--clay-purple);
+        }
+
+        .session-dot-container {
+            display: flex;
+            gap: 3px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .session-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--clay-pomodoro);
+        }
+
+        /* --- STREAK & STATS PAGE --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.streak-special {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 165, 2, 0.1));
+            border-color: var(--clay-amber);
+        }
+
+        .stat-val {
+            font-size: 48px;
+            font-weight: 800;
+            margin-top: 10px;
+            background: linear-gradient(45deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .streak-special .stat-val {
+            background: linear-gradient(45deg, var(--clay-pomodoro), var(--clay-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .chart-bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            flex-grow: 1;
+        }
+
+        .chart-bar {
+            width: 40px;
+            background: linear-gradient(to top, var(--clay-purple), var(--clay-long));
+            border-radius: 10px 10px 0 0;
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.2);
+            height: 0%;
+        }
+
+        .chart-label {
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* --- MUSIC & SETTINGS --- */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .settings-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 24px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .setting-row label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .mini-input {
+            width: 90px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .media-player-container {
+            margin-top: 15px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16/9;
+        }
+
+        /* Simple notification toast */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--clay-short);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <sidebar>
+        <div class="brand-zone">
+            <h2>ZENITH FOCUS</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Offline Workspace Engine</p>
+        </div>
+        
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="switchView('timer')">
+                <svg viewBox="0 0 24 24"><path d="M12 20c4.42 0 8-3.58 8-8s-3.58-8-8-8-8 3.58-8 8 3.58 8 8 8m0-18c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m1 5h-2v6h5v-2h-3V7z"/></svg>
+                Focus Timer
+            </button>
+            <button class="nav-btn" onclick="switchView('tasks')">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                Task Flow
+            </button>
+            <button class="nav-btn" onclick="switchView('calendar'); renderCalendar();">
+                <svg viewBox="0 0 24 24"><path d="M19 19H5V8h14m-3-7h-1v1H9V1H8v1H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2h-1V1z"/></svg>
+                Log History
+            </button>
+            <button class="nav-btn" onclick="switchView('streaks'); renderStats();">
+                <svg viewBox="0 0 24 24"><path d="M12 23c5.52 0 10-4.48 10-10 0-4.75-3.31-8.72-7.75-9.74l-.08-.02-.17-.04c-.33-.07-.67-.13-1-.16l-.25-.02c-.25-.01-.5-.02-.75-.02V1c0-.55-.45-1-1-1s-1 .45-1 1v2.03c-.25 0-.5.01-.75.02l-.25.02c-.33.03-.67.09-1 .16l-.17.04-.08.02C4.31 4.28 1 8.25 1 13c0 5.52 4.48 10 10 10zm1-17.93c2.47.46 4.47 2.46 4.93 4.93H13V5.07zm-2 0V10H6.07c.46-2.47 2.46-4.47 4.93-4.93zM5.07 12H11v5.93C8.53 17.47 6.53 15.47 5.07 12zm7.93 5.93V12h5.93c-.46 2.47-2.46 4.47-4.93 4.93z"/></svg>
+                Streaks & Analytics
+            </button>
+            <button class="nav-btn" onclick="switchView('settings')">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                Media & Config
+            </button>
+        </div>
+
+        <div style="font-size: 11px; text-align: center; color: var(--text-muted);">
+            System Secure & Active &copy; 2026
+        </div>
+    </sidebar>
+
+    <main>
+        <div id="view-timer" class="view-panel active">
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="pomodoro" onclick="setMode('pomodoro')">POMODORO</button>
+                <button class="mode-btn" data-mode="short" onclick="setMode('short')">SHORT BREAK</button>
+                <button class="mode-btn" data-mode="long" onclick="setMode('long')">LONG BREAK</button>
+            </div>
+
+            <div class="clock-wrapper">
+                <div class="flip-card" id="m-tens">0</div>
+                <div class="flip-card" id="m-ones">0</div>
+                <div class="clock-divider">:</div>
+                <div class="flip-card" id="s-tens">0</div>
+                <div class="flip-card" id="s-ones">0</div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-liquid" id="btn-start" onclick="startTimer()">START FOCUS</button>
+                <button class="btn-liquid" id="btn-pause" onclick="pauseTimer()" style="display:none;">PAUSE</button>
+                <button class="btn-liquid" id="btn-reset" onclick="resetTimer()">RESET</button>
+                <button class="btn-liquid" id="btn-skip" onclick="skipSession()">SKIP</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; color: var(--text-muted);" id="active-task-indicator">
+                No active task selected. Head over to <b>Task Flow</b> to focus on a goal!
+            </div>
+        </div>
+
+        <div id="view-tasks" class="view-panel">
+            <h2 style="margin-bottom: 20px;">Structured Tasks</h2>
+            <div class="tasks-layout">
+                <div>
+                    <div class="task-input-zone">
+                        <input type="text" id="task-input" class="clay-input" placeholder="What core output are you attacking next?">
+                        <button class="btn-add-task" onclick="addTask()">ADD TASK</button>
+                    </div>
+                    <div class="task-list" id="task-container"></div>
+                </div>
+                <div class="settings-card">
+                    <h3 style="margin-bottom: 15px;">Focus Mapping</h3>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                        Click the target bullseye icon on any task to bind it to the central jumbo flip clock engine. Tracking targeted deep work execution mitigates multitasking fragmentation.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-calendar" class="view-panel">
+            <div class="calendar-header">
+                <h2 id="calendar-month-year">Historical Framework</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-liquid" style="padding: 8px 20px; font-size:14px;" onclick="adjustMonth(-1)">&larr;</button>
+                    <button class="btn-liquid" style="padding: 8px 20px; font-size:14px;" onclick="adjustMonth(1)">&rarr;</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid-target"></div>
+        </div>
+
+        <div id="view-streaks" class="view-panel">
+            <h2 style="margin-bottom: 25px;">Engine Analytics</h2>
+            <div class="stats-grid">
+                <div class="stat-card streak-special">
+                    <h3>Current Streak</h3>
+                    <div class="stat-val" id="stat-current-streak">0 Days</div>
+                </div>
+                <div class="stat-card">
+                    <h3>All-Time Record</h3>
+                    <div class="stat-val" id="stat-max-streak">0 Days</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Output Sessions</h3>
+                    <div class="stat-val" id="stat-total-sessions">0 Sessions</div>
+                </div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px;">Weekly Distribution Profile</h3>
+            <div class="chart-container" id="weekly-chart">
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-sun"></div><div class="chart-label">Sun</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-mon"></div><div class="chart-label">Mon</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-tue"></div><div class="chart-label">Tue</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-wed"></div><div class="chart-label">Wed</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-thu"></div><div class="chart-label">Thu</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-fri"></div><div class="chart-label">Fri</div></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" id="bar-sat"></div><div class="chart-label">Sat</div></div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view-panel">
+            <h2 style="margin-bottom: 25px;">System & Media Configuration</h2>
+            <div class="settings-layout">
+                <div class="settings-card">
+                    <h3 style="margin-bottom: 20px;">Time-Interval Engine Tuning</h3>
+                    <div class="setting-row">
+                        <label>Pomodoro (Mins)</label>
+                        <input type="number" id="cfg-pomo" class="mini-input" value="25" onchange="saveConfig()">
+                    </div>
+                    <div class="setting-row">
+                        <label>Short Break (Mins)</label>
+                        <input type="number" id="cfg-short" class="mini-input" value="5" onchange="saveConfig()">
+                    </div>
+                    <div class="setting-row">
+                        <label>Long Break (Mins)</label>
+                        <input type="number" id="cfg-long" class="mini-input" value="15" onchange="saveConfig()">
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 20px 0;">
+                    <h3 style="margin-bottom: 20px;">Offline Background Audio Generator</h3>
+                    <div class="setting-row">
+                        <label>Native Binaural Synth Noise</label>
+                        <button class="btn-liquid" style="padding: 8px 20px; font-size:14px;" id="btn-synth" onclick="toggleSynthNoise()">ACTIVATE</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3 style="margin-bottom: 10px;">Streamed Media Portal</h3>
+                    <p style="font-size: 13px; color:var(--text-muted); margin-bottom: 15px;">Input your preferred YouTube Stream URL or ID to sync atmospheric workspace audio.</p>
+                    <div class="task-input-zone">
+                        <input type="text" id="yt-url-input" class="clay-input" style="padding:10px 15px;" placeholder="YouTube Video ID or URL" value="jfKfPfyJRdk">
+                        <button class="btn-add-task" style="padding:0 15px;" onclick="loadYouTubeStream()">SYNC</button>
+                    </div>
+                    <div class="media-player-container">
+                        <iframe id="yt-player" width="100%" height="100%" src="https://www.youtube.com/embed/jfKfPfyJRdk?enablejsapi=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast">System State Synchronized</div>
+
+<script>
+    // --- STATE CORE DATA ENGINE ---
+    let state = {
+        timer: {
+            mode: 'pomodoro',
+            timeLeft: 1500,
+            isRunning: false,
+            instance: null
+        },
+        config: {
+            pomodoro: 25,
+            short: 5,
+            long: 15
+        },
+        tasks: [],
+        activeTaskId: null,
+        history: {}, // Format: {'YYYY-MM-DD': count}
+        streaks: {
+            current: 0,
+            max: 0,
+            lastDate: null
+        }
+    };
+
+    // Global variable tracking active view state for calendar navigation
+    let currentCalendarDate = new Date();
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+        loadDataFromStorage();
+        syncTimerUIFromMode();
+        renderTasks();
+        evaluateStreaks();
+        
+        // Dynamic Title Handler loop
+        setInterval(() => {
+            if (state.timer.isRunning) {
+                let m = Math.floor(state.timer.timeLeft / 60).toString().padStart(2, '0');
+                let s = (state.timer.timeLeft % 60).toString().padStart(2, '0');
+                document.title = `(${m}:${s}) Zenith Focus Engine`;
+            } else {
+                document.title = "Zenith Focus - Ultra Pomodoro Dashboard";
+            }
+        }, 1000);
+    });
+
+    // --- LOCALSTORAGE PERSISTENT WRAPPERS ---
+    function loadDataFromStorage() {
+        if(localStorage.getItem('zenith_config')) state.config = JSON.parse(localStorage.getItem('zenith_config'));
+        if(localStorage.getItem('zenith_tasks')) state.tasks = JSON.parse(localStorage.getItem('zenith_tasks'));
+        if(localStorage.getItem('zenith_history')) state.history = JSON.parse(localStorage.getItem('zenith_history'));
+        if(localStorage.getItem('zenith_streaks')) state.streaks = JSON.parse(localStorage.getItem('zenith_streaks'));
+
+        // Load visual parameters into inputs
+        document.getElementById('cfg-pomo').value = state.config.pomodoro;
+        document.getElementById('cfg-short').value = state.config.short;
+        document.getElementById('cfg-long').value = state.config.long;
+    }
+
+    function persistState(key, data) {
+        localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function triggerNotification(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // --- NAVIGATION CONTROLLER ---
+    function switchView(targetViewId) {
+        document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(`view-${targetViewId}`).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // --- SYSTEM TIME ENGINE CORE ---
+    function setMode(mode) {
+        state.timer.mode = mode;
+        state.timer.isRunning = false;
+        clearInterval(state.timer.instance);
+        
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+        
+        syncTimerUIFromMode();
+        toggleControlButtons(false);
+    }
+
+    function syncTimerUIFromMode() {
+        state.timer.timeLeft = state.config[state.timer.mode] * 60;
+        updateFlipClockDisplays();
+    }
+
+    function updateFlipClockDisplays() {
+        let minutes = Math.floor(state.timer.timeLeft / 60);
+        let seconds = state.timer.timeLeft % 60;
+
+        let mStr = minutes.toString().padStart(2, '0');
+        let sStr = seconds.toString().padStart(2, '0');
+
+        updateDigitWithAnimation('m-tens', mStr[0]);
+        updateDigitWithAnimation('m-ones', mStr[1]);
+        updateDigitWithAnimation('s-tens', sStr[0]);
+        updateDigitWithAnimation('s-ones', sStr[1]);
+    }
+
+    function updateDigitWithAnimation(id, value) {
+        const el = document.getElementById(id);
+        if(el.innerText !== value) {
+            el.style.transform = "rotateX(90deg)";
+            el.style.opacity = "0.5";
+            setTimeout(() => {
+                el.innerText = value;
+                el.style.transform = "rotateX(0deg)";
+                el.style.opacity = "1";
+            }, 150);
+        }
+    }
+
+    function toggleControlButtons(running) {
+        state.timer.isRunning = running;
+        document.getElementById('btn-start').style.display = running ? 'none' : 'inline-block';
+        document.getElementById('btn-pause').style.display = running ? 'inline-block' : 'none';
+    }
+
+    function startTimer() {
+        if(state.timer.isRunning) return;
+        toggleControlButtons(true);
+        
+        state.timer.instance = setInterval(() => {
+            if(state.timer.timeLeft > 0) {
+                state.timer.timeLeft--;
+                updateFlipClockDisplays();
+            } else {
+                handleSessionExhaustion();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        toggleControlButtons(false);
+        clearInterval(state.timer.instance);
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        syncTimerUIFromMode();
+    }
+
+    function skipSession() {
+        pauseTimer();
+        handleSessionExhaustion(true);
+    }
+
+    function handleSessionExhaustion(skipped = false) {
+        clearInterval(state.timer.instance);
+        toggleControlButtons(false);
+        triggerNativeChimeSound();
+
+        if(!skipped && state.timer.mode === 'pomodoro') {
+            logCompletedSession();
+        }
+
+        // Automated Workflow Progression Matrix
+        if (state.timer.mode === 'pomodoro') {
+            triggerNotification("Focus Window Executed Successfully.");
+            setMode('short'); 
+        } else {
+            triggerNotification("Break Complete. Re-engaging Focus Window.");
+            setMode('pomodoro');
+        }
+    }
+
+    function saveConfig() {
+        state.config.pomodoro = parseInt(document.getElementById('cfg-pomo').value) || 25;
+        state.config.short = parseInt(document.getElementById('cfg-short').value) || 5;
+        state.config.long = parseInt(document.getElementById('cfg-long').value) || 15;
+        
+        persistState('zenith_config', state.config);
+        syncTimerUIFromMode();
+        triggerNotification("Engine System Parameters Reconfigured.");
+    }
+
+    // --- DATA CAPTURE, LOGGING & HISTORICAL TRACKING ---
+    function getTodayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+    }
+
+    function logCompletedSession() {
+        const today = getTodayString();
+        state.history[today] = (state.history[today] || 0) + 1;
+        persistState('zenith_history', state.history);
+
+        // Map session count directly to targeted active task if available
+        if(state.activeTaskId) {
+            let tIdx = state.tasks.findIndex(t => t.id === state.activeTaskId);
+            if(tIdx !== -1) {
+                state.tasks[tIdx].completedPomodoros++;
+                persistState('zenith_tasks', state.tasks);
+                renderTasks();
+            }
+        }
+        evaluateStreaks();
+    }
+
+    function evaluateStreaks() {
+        const todayStr = getTodayString();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = `${yesterday.getFullYear()}-${(yesterday.getMonth()+1).toString().padStart(2,'0')}-${yesterday.getDate().toString().padStart(2,'0')}`;
+
+        if (state.history[todayStr]) {
+            if (state.streaks.lastDate === yesterdayStr) {
+                state.streaks.current++;
+                state.streaks.lastDate = todayStr;
+            } else if (state.streaks.lastDate !== todayStr) {
+                state.streaks.current = 1;
+                state.streaks.lastDate = todayStr;
+            }
+        } else {
+            // Verify if streak has died out
+            if(state.streaks.lastDate !== todayStr && state.streaks.lastDate !== yesterdayStr) {
+                state.streaks.current = 0;
+            }
+        }
+
+        if(state.streaks.current > state.streaks.max) {
+            state.streaks.max = state.streaks.current;
+        }
+
+        persistState('zenith_streaks', state.streaks);
+    }
+
+    // --- TASK CONTEXT CRUD ENGINE ---
+    function addTask() {
+        const input = document.getElementById('task-input');
+        if(!input.value.trim()) return;
+
+        const newTask = {
+            id: Date.now(),
+            title: input.value.trim(),
+            done: false,
+            completedPomodoros: 0
+        };
+
+        state.tasks.push(newTask);
+        persistState('zenith_tasks', state.tasks);
+        input.value = '';
+        renderTasks();
+        triggerNotification("Task Integrated Safely.");
+    }
+
+    function toggleTaskDone(id) {
+        let t = state.tasks.find(x => x.id === id);
+        if(t) {
+            t.done = !t.done;
+            persistState('zenith_tasks', state.tasks);
+            renderTasks();
+        }
+    }
+
+    function deleteTask(id) {
+        state.tasks = state.tasks.filter(x => x.id !== id);
+        if(state.activeTaskId === id) {
+            state.activeTaskId = null;
+            document.getElementById('active-task-indicator').innerHTML = "No active task selected. Head over to <b>Task Flow</b> to focus on a goal!";
+        }
+        persistState('zenith_tasks', state.tasks);
+        renderTasks();
+    }
+
+    function selectTaskForFocus(id) {
+        let t = state.tasks.find(x => x.id === id);
+        if(t) {
+            state.activeTaskId = id;
+            document.getElementById('active-task-indicator').innerHTML = `Focus Target Locked: <b style="color: var(--clay-purple); font-size:18px;">${t.title}</b> [Done: ${t.completedPomodoros} Sessions]`;
+            triggerNotification("Focus Targeting Context Locked.");
+            switchView('timer');
+        }
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('task-container');
+        container.innerHTML = '';
+        
+        state.tasks.forEach(task => {
+            const item = document.createElement('div');
+            item.className = `task-item ${task.done ? 'completed' : ''}`;
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTaskDone(${task.id})" style="transform: scale(1.3); cursor:pointer;">
+                    <div>
+                        <p style="font-weight:600; color:#fff;">${task.title}</p>
+                        <p style="font-size:12px; color:var(--text-muted);">Allocated Output: ${task.completedPomodoros} focus milestones</p>
+                    </div>
+                </div>
+                <div class="task-actions">
+                    <button class="action-btn" title="Focus Task" onclick="selectTaskForFocus(${task.id})">🎯</button>
+                    <button class="action-btn" title="Purge" onclick="deleteTask(${task.id})">🗑️</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // --- CALENDAR DOM RENDERING ENGINE ---
+    function adjustMonth(offset) {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid-target');
+        const headerTitle = document.getElementById('calendar-month-year');
+        grid.innerHTML = '';
+
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        headerTitle.innerText = `${monthNames[month]} ${year}`;
+
+        const daysInWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        daysInWeek.forEach(d => {
+            let c = document.createElement('div');
+            c.className = 'calendar-day-name';
+            c.innerText = d;
+            grid.appendChild(c);
+        });
+
+        const firstDayIdx = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        // Padding cells for empty days at start of month
+        for(let i = 0; i < firstDayIdx; i++) {
+            let emptyCell = document.createElement('div');
+            grid.appendChild(emptyCell);
+        }
+
+        const todayStr = getTodayString();
+
+        for(let day = 1; day <= totalDays; day++) {
+            let cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            let dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+            if(dateStr === todayStr) cell.classList.add('active-day');
+
+            cell.innerHTML = `<span>${day}</span>`;
+
+            // Append small dynamic metrics indicators if entries exist
+            if(state.history[dateStr]) {
+                let dotWrap = document.createElement('div');
+                dotWrap.className = 'session-dot-container';
+                for(let s=0; s < Math.min(state.history[dateStr], 4); s++) {
+                    let dot = document.createElement('div');
+                    dot.className = 'session-dot';
+                    dotWrap.appendChild(dot);
+                }
+                cell.appendChild(dotWrap);
+                cell.title = `${state.history[dateStr]} target blocks logged.`;
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    // --- ANALYTICS VIEW CODE ---
+    function renderStats() {
+        document.getElementById('stat-current-streak').innerText = `${state.streaks.current} Days`;
+        document.getElementById('stat-max-streak').innerText = `${state.streaks.max} Days`;
+        
+        let total = Object.values(state.history).reduce((a,b) => a + b, 0);
+        document.getElementById('stat-total-sessions').innerText = `${total} Units`;
+
+        // Graph weekly analytical spread output
+        const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        let dayTotals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+
+        // Populate raw weekly volume calculation mapping
+        Object.keys(state.history).forEach(dateStr => {
+            let parts = dateStr.split('-');
+            let dObj = new Date(parts[0], parts[1]-1, parts[2]);
+            dayTotals[dObj.getDay()] += state.history[dateStr];
+        });
+
+        let maxVal = Math.max(...Object.values(dayTotals), 1);
+        daysOfWeek.forEach((dName, idx) => {
+            let calculatedPercentage = (dayTotals[idx] / maxVal) * 100;
+            document.getElementById(`bar-${dName}`).style.height = `${Math.max(calculatedPercentage, 8)}%`;
+        });
+    }
+
+    // --- STREAMED PORTAL (YOUTUBE REMOTE ENGINE) ---
+    function loadYouTubeStream() {
+        let input = document.getElementById('yt-url-input').value.trim();
+        let videoId = input;
+        
+        if(input.includes('v=')) {
+            videoId = input.split('v=')[1].split('&')[0];
+        } else if(input.includes('youtu.be/')) {
+            videoId = input.split('youtu.be/')[1].split('?')[0];
+        }
+
+        if(videoId) {
+            document.getElementById('yt-player').src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1`;
+            triggerNotification("Synchronized Media Stream Channel.");
+        }
+    }
+
+    // --- OFFLINE AUDIOSYNTH PORTAL (WEB AUDIO API GENERATOR) ---
+    let audioCtx = null;
+    let whiteNoiseNode = null;
+
+    function toggleSynthNoise() {
+        const btn = document.getElementById('btn-synth');
+        
+        if (whiteNoiseNode) {
+            // Stop active synth node engine
+            whiteNoiseNode.stop();
+            whiteNoiseNode = null;
+            btn.innerText = "ACTIVATE";
+            btn.style.background = "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))";
+            triggerNotification("Synth Noise Matrix Shutdown.");
+        } else {
+            // Instantiate native core pipeline architecture
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            let bufferSize = 2 * audioCtx.sampleRate,
+                noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
+                output = noiseBuffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2.0 - 1.0;
+            }
+            
+            whiteNoiseNode = audioCtx.createBufferSource();
+            whiteNoiseNode.buffer = noiseBuffer;
+            whiteNoiseNode.loop = true;
+            
+            // Connect structural gain optimization layer for ambient dynamic normalization
+            let lowpassFilter = audioCtx.createBiquadFilter();
+            lowpassFilter.type = 'lowpass';
+            lowpassFilter.frequency.value = 400; // Brown noise curve mimicry transformation
+            
+            let gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0.15; // Set volume profile to non-intrusive soft ceiling
+            
+            whiteNoiseNode.connect(lowpassFilter);
+            lowpassFilter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            whiteNoiseNode.start();
+            btn.innerText = "DEACTIVATE";
+            btn.style.background = "linear-gradient(135deg, rgba(241, 196, 15, 0.3), rgba(255,255,255,0.05))";
+            triggerNotification("Offline Ambient Synth Engine Online.");
+        }
+    }
+
+    function triggerNativeChimeSound() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 high pitch alert chord entry
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+    }
+</script>
+</body>
+</html>
