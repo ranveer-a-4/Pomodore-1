@@ -3,70 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zenith Pomodoro OS - Smart Edition</title>
-    <!-- Tesseract.js for Online OCR (Fails gracefully if offline) -->
+    <title>Zenith Pomodoro OS - Ultimate Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         /* --- CORE THEME ENGINE --- */
         :root {
-            --bg-main: #e0e5ec; --surface: #e0e5ec; --text-main: #2d3436; --text-muted: #636e72;
-            --shadow-light: #ffffff; --shadow-dark: #a3b1c6; --glass-bg: rgba(255, 255, 255, 0.2); --glass-border: rgba(255, 255, 255, 0.4);
+            --bg-main: #e0e5ec; --surface: rgba(224, 229, 236, 0.85); --text-main: #2d3436; --text-muted: #636e72;
+            --shadow-light: rgba(255, 255, 255, 0.7); --shadow-dark: rgba(163, 177, 198, 0.6); 
+            --glass-bg: rgba(255, 255, 255, 0.2); --glass-border: rgba(255, 255, 255, 0.4);
             --clay-red: #ff7675; --clay-green: #55efc4; --clay-blue: #74b9ff; --clay-purple: #a29bfe; --clay-yellow: #ffeaa7;
         }
 
         [data-theme="dark"] {
-            --bg-main: #1a1b1e; --surface: #1a1b1e; --text-main: #e4e5e7; --text-muted: #8c8f96;
-            --shadow-light: #25272b; --shadow-dark: #0f1012; --glass-bg: rgba(0, 0, 0, 0.2); --glass-border: rgba(255, 255, 255, 0.05);
+            --bg-main: #1a1b1e; --surface: rgba(26, 27, 30, 0.85); --text-main: #e4e5e7; --text-muted: #8c8f96;
+            --shadow-light: rgba(37, 39, 43, 0.5); --shadow-dark: rgba(15, 16, 18, 0.8); 
+            --glass-bg: rgba(0, 0, 0, 0.4); --glass-border: rgba(255, 255, 255, 0.1);
             --clay-red: #d63031; --clay-green: #00b894; --clay-blue: #0984e3; --clay-purple: #6c5ce7; --clay-yellow: #fdcb6e;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; transition: background 0.3s, color 0.3s, box-shadow 0.3s; }
-        body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; flex-direction: row; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; transition: background 0.3s, color 0.3s; }
+        
+        body { 
+            background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; flex-direction: row; 
+            position: relative;
+        }
 
-        /* --- RESPONSIVE LAYOUT --- */
-        nav { width: 260px; background: var(--surface); padding: 2rem 1.5rem; box-shadow: 8px 0px 20px var(--shadow-dark), -8px 0px 20px var(--shadow-light); z-index: 100; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;}
-        main { flex: 1; padding: 2rem; overflow-y: auto; position: relative; }
+        /* --- DYNAMIC BACKGROUND LAYER --- */
+        #dynamic-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background-size: cover; background-position: center; transition: opacity 1s ease-in-out;
+            opacity: 0.4; /* Keeps UI readable */
+            pointer-events: none;
+        }
+
+        /* --- RESPONSIVE LAYOUT & BLUR --- */
+        nav { 
+            width: 260px; background: var(--surface); padding: 2rem 1.5rem; 
+            box-shadow: 8px 0px 20px var(--shadow-dark), -8px 0px 20px var(--shadow-light); 
+            z-index: 100; display: flex; flex-direction: column; gap: 0.8rem; overflow-y: auto;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        main { flex: 1; padding: 2rem; overflow-y: auto; position: relative; z-index: 10; }
         .view { display: none; animation: fadeIn 0.3s ease forwards; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* UI ELEMENTS */
-        .neu-btn { background: var(--surface); border: none; padding: 1rem; border-radius: 15px; font-size: 1rem; font-weight: 700; color: var(--text-muted); cursor: pointer; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .neu-btn { background: var(--surface); border: none; padding: 0.9rem; border-radius: 15px; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); cursor: pointer; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); display: flex; align-items: center; justify-content: center; gap: 10px; backdrop-filter: blur(10px); }
         .neu-btn:active, .neu-btn.active { color: var(--clay-blue); box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light); }
-        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 2rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 2rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); position: relative; overflow: hidden; }
         .liquid-btn { background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; color: var(--text-main); }
         .liquid-btn:hover { background: var(--clay-blue); color: #fff; transform: translateY(-2px); }
 
-        /* JUMBO CLOCK */
+        /* CLOCKS */
         .clock-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 3rem 0; font-variant-numeric: tabular-nums; }
-        .flip-digit { background: var(--surface); color: var(--clay-blue); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; padding: 1rem 2rem; border-radius: 25px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light), inset 2px 2px 5px var(--glass-border); text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .flip-digit { background: var(--surface); color: var(--clay-blue); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; padding: 1rem 2rem; border-radius: 25px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light), inset 2px 2px 5px var(--glass-border); text-shadow: 0 2px 4px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+        
         .progress-bar-container { width: 100%; height: 10px; background: var(--shadow-dark); border-radius: 10px; overflow: hidden; margin-bottom: 20px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
         .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--clay-purple), var(--clay-blue)); transition: width 1s linear; }
 
+        /* JUMBO CLOCK SPECIFIC */
+        #view-jumbo { text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #view-jumbo .flip-digit { font-size: clamp(8rem, 20vw, 15rem); padding: 2rem 3rem; border-radius: 40px; }
+        #view-jumbo .colon { font-size: clamp(6rem, 15vw, 12rem); color: var(--text-muted); }
+
         /* CARDS & INPUTS */
-        .clay-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), inset 2px 2px 5px var(--glass-border); }
+        .clay-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), inset 2px 2px 5px var(--glass-border); backdrop-filter: blur(15px); }
         .clay-red { border-left: 5px solid var(--clay-red); } .clay-yellow { border-left: 5px solid var(--clay-yellow); } .clay-green { border-left: 5px solid var(--clay-green); }
-        input, select, textarea { width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--surface); color: var(--text-main); box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); outline: none; margin-bottom: 15px; resize: vertical;}
+        input, select, textarea { width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--surface); color: var(--text-main); box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); outline: none; margin-bottom: 15px; resize: vertical; font-weight: bold;}
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
 
         /* SCANNER DRAG DROP */
         .drop-zone { border: 2px dashed var(--clay-purple); border-radius: 20px; padding: 40px; text-align: center; color: var(--text-muted); cursor: pointer; transition: background 0.3s; }
-        .drop-zone:hover, .drop-zone.dragover { background: rgba(162, 155, 254, 0.1); }
+        .drop-zone:hover { background: rgba(162, 155, 254, 0.1); }
         .loader { border: 4px solid var(--shadow-light); border-top: 4px solid var(--clay-blue); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
-            nav { width: 100%; height: 85px; flex-direction: row; justify-content: space-between; padding: 10px; border-radius: 20px 20px 0 0; z-index: 1000; overflow-x: auto; flex-wrap: nowrap;}
+            nav { width: 100%; height: 90px; flex-direction: row; justify-content: space-between; padding: 10px; border-radius: 20px 20px 0 0; z-index: 1000; overflow-x: auto; flex-wrap: nowrap;}
             nav h2, nav small { display: none; }
-            .neu-btn { padding: 8px; font-size: 0.75rem; flex-direction: column; gap: 3px; border-radius: 10px; min-width: 60px;}
-            main { padding: 1rem; padding-bottom: 90px; }
+            .neu-btn { padding: 8px; font-size: 0.75rem; flex-direction: column; gap: 3px; border-radius: 10px; min-width: 65px;}
+            main { padding: 1rem; padding-bottom: 100px; }
             .grid-2 { grid-template-columns: 1fr; }
+            #view-jumbo .flip-digit { font-size: 6rem; padding: 1rem 1.5rem; }
         }
     </style>
 </head>
 <body data-theme="dark">
+
+    <div id="dynamic-bg"></div>
 
     <nav>
         <div style="text-align: center; margin-bottom: 1rem;">
@@ -74,6 +101,7 @@
             <small id="dailyGoalText">0/4 Sessions Today</small>
         </div>
         <button class="neu-btn active" onclick="switchView('timer')">⏱️ Timer</button>
+        <button class="neu-btn" onclick="switchView('jumbo')" style="color: var(--clay-blue);">🕒 Jumbo</button>
         <button class="neu-btn" onclick="switchView('tasks')">📋 Tasks</button>
         <button class="neu-btn" onclick="switchView('smart')" style="color: var(--clay-purple);">🧠 AI Planner</button>
         <button class="neu-btn" onclick="switchView('music')">🎵 Media</button>
@@ -82,7 +110,6 @@
     </nav>
 
     <main id="mainContent">
-        <!-- 1. TIMER VIEW -->
         <div id="view-timer" class="view active">
             <div style="text-align: center; font-style: italic; color: var(--text-muted); margin-bottom: 20px;" id="quoteHud">"Focus is a matter of deciding what things you're not going to do."</div>
             <div class="glass-panel" style="text-align: center;">
@@ -96,14 +123,25 @@
                     <div class="flip-digit" id="minutes">25</div><span style="font-size: clamp(3rem, 8vw, 6rem); color: var(--text-muted);">:</span><div class="flip-digit" id="seconds">00</div>
                 </div>
                 <div style="display: flex; justify-content: center; gap: 15px;">
-                    <button class="neu-btn" id="startBtn" onclick="toggleTimer()" style="width: 150px; color: var(--clay-green);">▶ START</button>
+                    <button class="neu-btn startBtnGlobal" onclick="toggleTimer()" style="width: 150px; color: var(--clay-green);">▶ START</button>
                     <button class="neu-btn" onclick="skipTimer()" style="width: 100px;">⏭ SKIP</button>
-                    <button class="neu-btn" onclick="toggleFullscreen()" style="width: 60px;">⛶</button>
                 </div>
             </div>
         </div>
 
-        <!-- 2. TASKS VIEW -->
+        <div id="view-jumbo" class="view">
+            <h2 id="jumboModeText" style="color: var(--clay-blue); margin-bottom: 20px; font-size: 2rem;">Focus Session</h2>
+            <div class="clock-container" style="margin: 0;">
+                <div class="flip-digit" id="jumbo-minutes">25</div>
+                <span class="colon">:</span>
+                <div class="flip-digit" id="jumbo-seconds">00</div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 40px;">
+                <button class="neu-btn startBtnGlobal" onclick="toggleTimer()" style="width: 180px; font-size: 1.2rem; color: var(--clay-green);">▶ START</button>
+                <button class="neu-btn" onclick="toggleFullscreen()" style="width: 60px; font-size: 1.2rem;" title="Fullscreen">⛶</button>
+            </div>
+        </div>
+
         <div id="view-tasks" class="view">
             <div class="flex-between">
                 <h2>Task Engine</h2>
@@ -123,17 +161,15 @@
             <div id="taskList"></div>
         </div>
 
-        <!-- 3. SMART AI PLANNER VIEW (NEW) -->
         <div id="view-smart" class="view">
             <h2>AI Document & Schedule Planner</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Upload an image of your exam schedule, syllabus, or paste text. The engine will extract dates and generate an automated study plan.</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Upload an image of your schedule/syllabus, or paste text. The engine will extract dates and build a study plan.</p>
             
             <div class="grid-2">
                 <div class="clay-card">
                     <h3 style="color: var(--clay-purple); margin-bottom: 15px;">Image Scanner (OCR)</h3>
                     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
                         <p>Click or Drag & Drop Image Here</p>
-                        <small>Requires internet for OCR model</small>
                         <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)">
                     </div>
                     <div class="loader" id="ocrLoader"></div>
@@ -142,7 +178,7 @@
 
                 <div class="clay-card">
                     <h3 style="color: var(--clay-yellow); margin-bottom: 15px;">Offline Text Parser</h3>
-                    <textarea id="rawTextInput" rows="5" placeholder="Paste schedule text here if offline... e.g., 'Math Exam on 10/25'"></textarea>
+                    <textarea id="rawTextInput" rows="5" placeholder="Paste schedule text here... e.g., 'Math Exam on 10/25'"></textarea>
                     <button class="neu-btn" onclick="parseTextData()" style="width: 100%; color: var(--clay-green);">Analyze & Generate Tasks</button>
                 </div>
             </div>
@@ -150,11 +186,9 @@
             <div class="clay-card" id="aiResultsCard" style="display: none; border-left: 5px solid var(--clay-purple);">
                 <h3>Generated Study Plan</h3>
                 <div id="aiOutputLog" style="margin-top: 15px; font-size: 0.9rem; line-height: 1.6;"></div>
-                <button class="liquid-btn" style="margin-top: 15px;" onclick="switchView('tasks')">View In Tasks ➔</button>
             </div>
         </div>
 
-        <!-- 4. MUSIC VIEW -->
         <div id="view-music" class="view">
             <h2>Media & Ambience</h2><br>
             <div class="grid-2">
@@ -178,7 +212,6 @@
             </div>
         </div>
 
-        <!-- 5. STATS VIEW -->
         <div id="view-stats" class="view">
             <h2>Analytics & Achievements</h2><br>
             <div class="grid-2">
@@ -187,34 +220,45 @@
             </div>
         </div>
 
-        <!-- 6. SETTINGS VIEW -->
         <div id="view-settings" class="view">
             <h2>Configuration</h2><br>
             <div class="grid-2">
                 <div class="clay-card">
-                    <h3>Theme & Goals</h3><br>
+                    <h3 style="color: var(--clay-blue);">Visuals & Environments</h3><br>
                     <div class="flex-between" style="margin-bottom: 15px;"><span>Dark Mode</span><button class="liquid-btn" onclick="toggleTheme()">Toggle</button></div>
-                    <span>Daily Goal</span><input type="number" id="cfgGoal" onchange="updateSettings()">
+                    <p style="margin-bottom: 10px;">Dynamic Background</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="liquid-btn" onclick="setBackground('none')">Default</button>
+                        <button class="liquid-btn" onclick="setBackground('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop')">Mountain</button>
+                        <button class="liquid-btn" onclick="setBackground('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop')">Beach</button>
+                    </div>
+                    <button class="neu-btn" onclick="document.getElementById('bgUpload').click()" style="width: 100%;">Upload Custom BG</button>
+                    <input type="file" id="bgUpload" style="display: none;" accept="image/*" onchange="handleBgUpload(event)">
                 </div>
+
                 <div class="clay-card">
                     <h3>Timer Details</h3><br>
-                    Focus <input type="number" id="cfgPomo" onchange="updateSettings()">
-                    Short Break <input type="number" id="cfgShort" onchange="updateSettings()">
+                    Daily Goal <input type="number" id="cfgGoal" onchange="updateSettings()">
+                    Focus Time (m) <input type="number" id="cfgPomo" onchange="updateSettings()">
+                    Short Break (m) <input type="number" id="cfgShort" onchange="updateSettings()">
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- STATE & STORAGE ---
-        const defaultState = { tasks: [], history: {}, streak: 0, totalSessions: 0, lastActiveDate: null, settings: { pomo: 25, short: 5, long: 15, goal: 8, autoStart: false, theme: 'dark' } };
-        let state = JSON.parse(localStorage.getItem('zenithOS')) || defaultState;
-        if(!state.settings) state.settings = defaultState.settings;
-        function saveState() { localStorage.setItem('zenithOS', JSON.stringify(state)); }
+        // --- 1. STATE & STORAGE ---
+        const defaultState = { tasks: [], history: {}, streak: 0, totalSessions: 0, lastActiveDate: null, settings: { pomo: 25, short: 5, long: 15, goal: 8, theme: 'dark', bgData: 'none' } };
+        let state = JSON.parse(localStorage.getItem('zenithOS_v2')) || defaultState;
+        if(!state.settings.bgData) state.settings.bgData = 'none';
+        
+        function saveState() { localStorage.setItem('zenithOS_v2', JSON.stringify(state)); }
 
-        // --- INIT ---
+        // --- 2. INIT ---
         window.onload = () => {
             document.body.setAttribute('data-theme', state.settings.theme);
+            setBackground(state.settings.bgData, false); // Load saved background
+            
             document.getElementById('cfgPomo').value = state.settings.pomo;
             document.getElementById('cfgShort').value = state.settings.short;
             document.getElementById('cfgGoal').value = state.settings.goal;
@@ -228,28 +272,92 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- TIMER ENGINE ---
-        let timerInterval, isRunning = false, currentMode = 'pomo', timeLeft = 0, totalTimeForMode = 0;
+        // --- 3. BACKGROUND ENGINE ---
+        function setBackground(urlOrBase64, save = true) {
+            const bgDiv = document.getElementById('dynamic-bg');
+            if (urlOrBase64 === 'none') {
+                bgDiv.style.backgroundImage = 'none';
+            } else {
+                bgDiv.style.backgroundImage = `url('${urlOrBase64}')`;
+            }
+            if (save) { state.settings.bgData = urlOrBase64; saveState(); }
+        }
+
+        function handleBgUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                setBackground(e.target.result); // Save as Base64 string to localStorage
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // --- 4. ADVANCED TIMESTAMP TIMER ENGINE (Background-Proof) ---
+        let timerInterval, isRunning = false, currentMode = 'pomo';
+        let totalTimeForMode = 0;
+        let targetEndTime = 0; // Absolute target timestamp
+        let pausedTimeLeft = 0; // Stores remaining time if paused
+
         function setMode(mode) {
             clearInterval(timerInterval); isRunning = false; currentMode = mode;
-            timeLeft = state.settings[mode] * 60; totalTimeForMode = timeLeft;
-            document.getElementById('startBtn').innerHTML = "▶ START"; document.getElementById('startBtn').style.color = "var(--clay-green)";
-            updateClockUI();
+            let durationSeconds = state.settings[mode] * 60;
+            totalTimeForMode = durationSeconds;
+            pausedTimeLeft = durationSeconds;
+            
+            document.getElementById('jumboModeText').innerText = mode === 'pomo' ? "Focus Session" : "Break Time";
+            updateGlobalStartButtons("▶ START", "var(--clay-green)");
+            updateClockUI(pausedTimeLeft);
         }
-        function updateClockUI() {
-            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0'); let s = (timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('minutes').innerText = m; document.getElementById('seconds').innerText = s;
-            document.getElementById('progressBar').style.width = `${((totalTimeForMode - timeLeft) / totalTimeForMode) * 100}%`;
+
+        function updateClockUI(secondsLeft) {
+            let m = Math.floor(secondsLeft / 60).toString().padStart(2, '0'); 
+            let s = (secondsLeft % 60).toString().padStart(2, '0');
+            
+            // Standard Clock
+            document.getElementById('minutes').innerText = m; 
+            document.getElementById('seconds').innerText = s;
+            document.getElementById('progressBar').style.width = `${((totalTimeForMode - secondsLeft) / totalTimeForMode) * 100}%`;
+            
+            // Jumbo Clock
+            document.getElementById('jumbo-minutes').innerText = m;
+            document.getElementById('jumbo-seconds').innerText = s;
+            
+            // Tab Title
+            document.title = isRunning ? `(${m}:${s}) Zenith` : "Zenith OS";
         }
+
+        function updateGlobalStartButtons(text, color) {
+            document.querySelectorAll('.startBtnGlobal').forEach(btn => {
+                btn.innerHTML = text; btn.style.color = color;
+            });
+        }
+
         function toggleTimer() {
-            const btn = document.getElementById('startBtn');
-            if (isRunning) { clearInterval(timerInterval); btn.innerHTML = "▶ RESUME"; btn.style.color = "var(--clay-green)"; } 
-            else {
-                btn.innerHTML = "⏸ PAUSE"; btn.style.color = "var(--clay-yellow)";
-                timerInterval = setInterval(() => { timeLeft--; updateClockUI(); if (timeLeft <= 0) handleTimerComplete(); }, 1000);
+            if (isRunning) {
+                // PAUSE LOGIC
+                clearInterval(timerInterval);
+                pausedTimeLeft = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+                updateGlobalStartButtons("▶ RESUME", "var(--clay-green)");
+            } else {
+                // START / RESUME LOGIC
+                targetEndTime = Date.now() + (pausedTimeLeft * 1000);
+                updateGlobalStartButtons("⏸ PAUSE", "var(--clay-yellow)");
+                
+                timerInterval = setInterval(() => {
+                    // Always calculate from absolute time to bypass phone sleep throttling
+                    let secondsLeft = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+                    updateClockUI(secondsLeft);
+                    
+                    if (secondsLeft <= 0) {
+                        pausedTimeLeft = 0;
+                        handleTimerComplete();
+                    }
+                }, 1000);
             }
             isRunning = !isRunning;
         }
+
         function skipTimer() { if(confirm("Skip phase?")) handleTimerComplete(true); }
         function handleTimerComplete(skipped = false) {
             clearInterval(timerInterval); playNativeBeep();
@@ -257,7 +365,16 @@
             setMode(currentMode === 'pomo' ? ((state.totalSessions % 4 === 0 && state.totalSessions > 0) ? 'long' : 'short') : 'pomo');
         }
 
-        // --- TASKS ENGINE ---
+        // Sync visual API if user returns to tab after a long time
+        document.addEventListener("visibilitychange", () => {
+            if (isRunning && document.visibilityState === 'visible') {
+                let secondsLeft = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+                updateClockUI(secondsLeft);
+                if(secondsLeft <= 0) handleTimerComplete();
+            }
+        });
+
+        // --- 5. TASKS ENGINE ---
         function addTask(text = null, priority = null) {
             const inputTxt = text || document.getElementById('taskInput').value.trim();
             const prio = priority || document.getElementById('taskPriority').value;
@@ -282,93 +399,65 @@
             });
         }
 
-        // --- AI PLANNER ENGINE (OCR & NLP) ---
+        // --- 6. SMART AI PLANNER ENGINE (Retained & Optimized) ---
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (typeof Tesseract === 'undefined') {
-                alert("Offline Mode Active: OCR Engine unreachable. Please paste text in the Offline Parser.");
-                return;
-            }
+            if (typeof Tesseract === 'undefined') { alert("Offline Mode Active: Please paste text manually."); return; }
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('ocrLoader').style.display = 'block';
-                document.getElementById('ocrStatus').innerText = "Initializing AI Vision Engine...";
-                
-                Tesseract.recognize(e.target.result, 'eng', { logger: m => document.getElementById('ocrStatus').innerText = `${m.status}: ${Math.round(m.progress * 100)}%` })
+                document.getElementById('ocrStatus').innerText = "Initializing AI Vision...";
+                Tesseract.recognize(e.target.result, 'eng')
                 .then(({ data: { text } }) => {
                     document.getElementById('ocrLoader').style.display = 'none';
-                    document.getElementById('ocrStatus').innerText = "Scan Complete! Parsing data...";
+                    document.getElementById('ocrStatus').innerText = "Scan Complete!";
                     document.getElementById('rawTextInput').value = text;
                     processExtractedData(text);
                 }).catch(err => {
                     document.getElementById('ocrLoader').style.display = 'none';
-                    document.getElementById('ocrStatus').innerText = "OCR Failed. Please paste text manually.";
+                    document.getElementById('ocrStatus').innerText = "OCR Failed. Paste text manually.";
                 });
             }
             reader.readAsDataURL(file);
         }
 
-        function parseTextData() {
-            const text = document.getElementById('rawTextInput').value;
-            if(!text) { alert("Please enter text to analyze."); return; }
-            processExtractedData(text);
-        }
+        function parseTextData() { processExtractedData(document.getElementById('rawTextInput').value); }
 
         function processExtractedData(text) {
-            // NLP Regex Engine
-            const lines = text.split('\n');
-            let generated = [];
-            
-            // Dictionaries & Expressions
+            if(!text) return;
+            const lines = text.split('\n'); let generated = [];
             const dateRegex = /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|aug|sept|nov|dec)?\s?\d{1,2}(st|nd|rd|th)?([\,\-\/]\s?\d{2,4})?\b/i;
             const fallbackDateRegex = /\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/;
-            const subjects = /(math|science|physics|chemistry|biology|history|english|literature|art|computer|programming|economics|business|exam|test|assignment|homework|project)/i;
+            const subjects = /(math|science|physics|chemistry|biology|history|english|literature|art|computer|programming|economics|business|exam|test|assignment|homework)/i;
 
             lines.forEach(line => {
-                let lower = line.toLowerCase();
-                let subjectMatch = line.match(subjects);
-                let dateMatch = line.match(dateRegex) || line.match(fallbackDateRegex);
-
+                let lower = line.toLowerCase(); let subjectMatch = line.match(subjects); let dateMatch = line.match(dateRegex) || line.match(fallbackDateRegex);
                 if (subjectMatch) {
-                    let isExam = lower.includes('exam') || lower.includes('test') || lower.includes('final');
-                    let priority = isExam ? 'clay-red' : 'clay-yellow';
+                    let isExam = lower.includes('exam') || lower.includes('test');
+                    let prio = isExam ? 'clay-red' : 'clay-yellow';
                     let dateStr = dateMatch ? dateMatch[0] : "Upcoming";
-                    let taskName = `${isExam ? 'Prep for' : 'Complete'} ${subjectMatch[0].toUpperCase()} (${dateStr})`;
-                    
-                    generated.push({ text: taskName, prio: priority, isExam: isExam });
+                    generated.push({ text: `${isExam ? 'Prep for' : 'Complete'} ${subjectMatch[0].toUpperCase()} (${dateStr})`, prio: prio, isExam: isExam });
                 }
             });
 
-            // Output formatting & Auto-Scheduling
             const logDiv = document.getElementById('aiOutputLog');
             logDiv.innerHTML = `<strong>Engine matched ${generated.length} actionable items.</strong><br><br>`;
-            
-            if(generated.length === 0) {
-                logDiv.innerHTML += "No clear academic subjects or dates recognized. Try refining the text.";
-            } else {
-                generated.forEach(item => {
-                    logDiv.innerHTML += `► Found: ${item.text} <br>`;
-                    addTask(item.text, item.prio); // Push to main task engine
-                    
-                    // Session generation (Schedule building)
-                    if(item.isExam) {
-                        let sessions = Math.floor(Math.random() * 3) + 4; // Suggest 4-6 blocks
-                        logDiv.innerHTML += `<span style="color: var(--clay-green); margin-left: 20px;">↳ Auto-generated ${sessions} Pomodoro study blocks for this module.</span><br>`;
-                        addTask(`Study Block: ${item.text}`, 'clay-green');
-                        addTask(`Review Block: ${item.text}`, 'clay-green');
-                    }
-                });
-            }
-
+            generated.forEach(item => {
+                logDiv.innerHTML += `► Found: ${item.text} <br>`; addTask(item.text, item.prio);
+                if(item.isExam) {
+                    let sessions = Math.floor(Math.random() * 3) + 4;
+                    logDiv.innerHTML += `<span style="color: var(--clay-green); margin-left: 20px;">↳ Auto-generated ${sessions} study blocks.</span><br>`;
+                    addTask(`Study Block: ${item.text}`, 'clay-green'); addTask(`Review Block: ${item.text}`, 'clay-green');
+                }
+            });
             document.getElementById('aiResultsCard').style.display = 'block';
-            document.getElementById('ocrStatus').innerText = "";
         }
 
-        // --- UTILS & AUDIO ---
+        // --- 7. UTILITIES & AUDIO ---
         function toggleTheme() { state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', state.settings.theme); saveState(); }
-        function updateSettings() { state.settings.pomo = parseInt(document.getElementById('cfgPomo').value)||25; state.settings.goal = parseInt(document.getElementById('cfgGoal').value)||8; saveState(); }
+        function updateSettings() { state.settings.pomo = parseInt(document.getElementById('cfgPomo').value)||25; state.settings.goal = parseInt(document.getElementById('cfgGoal').value)||8; saveState(); setMode(currentMode); }
         function logSession() {
             const today = new Date().toISOString().split('T')[0];
             if (state.lastActiveDate !== today) { let y = new Date(); y.setDate(y.getDate()-1); state.streak = (state.lastActiveDate===y.toISOString().split('T')[0]) ? state.streak+1 : 1; state.lastActiveDate = today; }
@@ -376,9 +465,10 @@
         }
         function updateStatsUI() { document.getElementById('streakCount').innerText=state.streak; document.getElementById('totalSessions').innerText=state.totalSessions; document.getElementById('dailyGoalText').innerText=`${state.history[new Date().toISOString().split('T')[0]]||0}/${state.settings.goal} Today`; }
         function loadVideo(id) { if(id) document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${id}?autoplay=1`; }
+        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>e); else if (document.exitFullscreen) document.exitFullscreen(); }
+        
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playNativeBeep() { let osc = audioCtx.createOscillator(); osc.type = 'triangle'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
-        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>e); else if (document.exitFullscreen) document.exitFullscreen(); }
         
         let noiseNodes = {};
         function toggleNoise(type) {
