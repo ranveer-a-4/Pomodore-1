@@ -3,133 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zenith Pomodoro OS</title>
+    <title>Zenith Pomodoro OS - Smart Edition</title>
+    <!-- Tesseract.js for Online OCR (Fails gracefully if offline) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         /* --- CORE THEME ENGINE --- */
         :root {
-            /* Light Theme Defaults */
-            --bg-main: #e0e5ec;
-            --surface: #e0e5ec;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            --glass-bg: rgba(255, 255, 255, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            
-            /* Claymorphism Accents */
-            --clay-red: #ff7675;
-            --clay-green: #55efc4;
-            --clay-blue: #74b9ff;
-            --clay-purple: #a29bfe;
-            --clay-yellow: #ffeaa7;
+            --bg-main: #e0e5ec; --surface: #e0e5ec; --text-main: #2d3436; --text-muted: #636e72;
+            --shadow-light: #ffffff; --shadow-dark: #a3b1c6; --glass-bg: rgba(255, 255, 255, 0.2); --glass-border: rgba(255, 255, 255, 0.4);
+            --clay-red: #ff7675; --clay-green: #55efc4; --clay-blue: #74b9ff; --clay-purple: #a29bfe; --clay-yellow: #ffeaa7;
         }
 
         [data-theme="dark"] {
-            --bg-main: #1a1b1e;
-            --surface: #1a1b1e;
-            --text-main: #e4e5e7;
-            --text-muted: #8c8f96;
-            --shadow-light: #25272b;
-            --shadow-dark: #0f1012;
-            --glass-bg: rgba(0, 0, 0, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.05);
-            
-            --clay-red: #d63031;
-            --clay-green: #00b894;
-            --clay-blue: #0984e3;
-            --clay-purple: #6c5ce7;
-            --clay-yellow: #fdcb6e;
+            --bg-main: #1a1b1e; --surface: #1a1b1e; --text-main: #e4e5e7; --text-muted: #8c8f96;
+            --shadow-light: #25272b; --shadow-dark: #0f1012; --glass-bg: rgba(0, 0, 0, 0.2); --glass-border: rgba(255, 255, 255, 0.05);
+            --clay-red: #d63031; --clay-green: #00b894; --clay-blue: #0984e3; --clay-purple: #6c5ce7; --clay-yellow: #fdcb6e;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; transition: background 0.3s, color 0.3s, box-shadow 0.3s; }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            flex-direction: row;
-        }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; flex-direction: row; }
 
         /* --- RESPONSIVE LAYOUT --- */
-        nav {
-            width: 260px;
-            background: var(--surface);
-            padding: 2rem 1.5rem;
-            box-shadow: 8px 0px 20px var(--shadow-dark), -8px 0px 20px var(--shadow-light);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
+        nav { width: 260px; background: var(--surface); padding: 2rem 1.5rem; box-shadow: 8px 0px 20px var(--shadow-dark), -8px 0px 20px var(--shadow-light); z-index: 100; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;}
         main { flex: 1; padding: 2rem; overflow-y: auto; position: relative; }
-
         .view { display: none; animation: fadeIn 0.3s ease forwards; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* UI ELEMENTS */
-        .neu-btn {
-            background: var(--surface); border: none; padding: 1rem; border-radius: 15px; font-size: 1rem; font-weight: 700; color: var(--text-muted); cursor: pointer;
-            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
+        .neu-btn { background: var(--surface); border: none; padding: 1rem; border-radius: 15px; font-size: 1rem; font-weight: 700; color: var(--text-muted); cursor: pointer; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); display: flex; align-items: center; justify-content: center; gap: 10px; }
         .neu-btn:active, .neu-btn.active { color: var(--clay-blue); box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light); }
-        
-        .glass-panel {
-            background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 2rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden;
-        }
-
-        .liquid-btn {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
-            padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; color: var(--text-main);
-        }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 2rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden; }
+        .liquid-btn { background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; color: var(--text-main); }
         .liquid-btn:hover { background: var(--clay-blue); color: #fff; transform: translateY(-2px); }
 
-        /* JUMBO CLOCK & PROGRESS */
+        /* JUMBO CLOCK */
         .clock-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 3rem 0; font-variant-numeric: tabular-nums; }
-        .flip-digit {
-            background: var(--surface); color: var(--clay-blue); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; padding: 1rem 2rem; border-radius: 25px;
-            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light), inset 2px 2px 5px var(--glass-border); text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
+        .flip-digit { background: var(--surface); color: var(--clay-blue); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; padding: 1rem 2rem; border-radius: 25px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light), inset 2px 2px 5px var(--glass-border); text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .progress-bar-container { width: 100%; height: 10px; background: var(--shadow-dark); border-radius: 10px; overflow: hidden; margin-bottom: 20px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
         .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--clay-purple), var(--clay-blue)); transition: width 1s linear; }
 
-        /* CLAYMORPHIC CARDS */
-        .clay-card {
-            background: var(--surface); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative;
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), inset 2px 2px 5px var(--glass-border);
-        }
-        .clay-red { border-left: 5px solid var(--clay-red); }
-        .clay-yellow { border-left: 5px solid var(--clay-yellow); }
-        .clay-green { border-left: 5px solid var(--clay-green); }
-
-        input, select {
-            width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--surface); color: var(--text-main);
-            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); outline: none; margin-bottom: 15px;
-        }
-
+        /* CARDS & INPUTS */
+        .clay-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), inset 2px 2px 5px var(--glass-border); }
+        .clay-red { border-left: 5px solid var(--clay-red); } .clay-yellow { border-left: 5px solid var(--clay-yellow); } .clay-green { border-left: 5px solid var(--clay-green); }
+        input, select, textarea { width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--surface); color: var(--text-main); box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); outline: none; margin-bottom: 15px; resize: vertical;}
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .quote-hud { text-align: center; font-style: italic; color: var(--text-muted); margin-bottom: 20px; }
 
-        /* MEDIA QUERIES FOR MOBILE */
+        /* SCANNER DRAG DROP */
+        .drop-zone { border: 2px dashed var(--clay-purple); border-radius: 20px; padding: 40px; text-align: center; color: var(--text-muted); cursor: pointer; transition: background 0.3s; }
+        .drop-zone:hover, .drop-zone.dragover { background: rgba(162, 155, 254, 0.1); }
+        .loader { border: 4px solid var(--shadow-light); border-top: 4px solid var(--clay-blue); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
             body { flex-direction: column-reverse; }
-            nav { width: 100%; height: 80px; flex-direction: row; justify-content: space-around; padding: 10px; border-radius: 20px 20px 0 0; z-index: 1000; overflow-x: auto;}
+            nav { width: 100%; height: 85px; flex-direction: row; justify-content: space-between; padding: 10px; border-radius: 20px 20px 0 0; z-index: 1000; overflow-x: auto; flex-wrap: nowrap;}
             nav h2, nav small { display: none; }
-            .neu-btn { padding: 10px; font-size: 0.8rem; flex-direction: column; gap: 5px; border-radius: 10px; }
+            .neu-btn { padding: 8px; font-size: 0.75rem; flex-direction: column; gap: 3px; border-radius: 10px; min-width: 60px;}
             main { padding: 1rem; padding-bottom: 90px; }
             .grid-2 { grid-template-columns: 1fr; }
-            .clock-container { margin: 1.5rem 0; }
         }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
 
     <nav>
         <div style="text-align: center; margin-bottom: 1rem;">
@@ -138,44 +75,40 @@
         </div>
         <button class="neu-btn active" onclick="switchView('timer')">⏱️ Timer</button>
         <button class="neu-btn" onclick="switchView('tasks')">📋 Tasks</button>
+        <button class="neu-btn" onclick="switchView('smart')" style="color: var(--clay-purple);">🧠 AI Planner</button>
         <button class="neu-btn" onclick="switchView('music')">🎵 Media</button>
         <button class="neu-btn" onclick="switchView('stats')">📈 Stats</button>
         <button class="neu-btn" onclick="switchView('settings')">⚙️ Config</button>
     </nav>
 
     <main id="mainContent">
+        <!-- 1. TIMER VIEW -->
         <div id="view-timer" class="view active">
-            <div class="quote-hud" id="quoteHud">"Focus is a matter of deciding what things you're not going to do."</div>
-            
+            <div style="text-align: center; font-style: italic; color: var(--text-muted); margin-bottom: 20px;" id="quoteHud">"Focus is a matter of deciding what things you're not going to do."</div>
             <div class="glass-panel" style="text-align: center;">
                 <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
-                
                 <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
                     <button class="liquid-btn" onclick="setMode('pomo')">Pomodoro</button>
                     <button class="liquid-btn" onclick="setMode('short')">Short Break</button>
                     <button class="liquid-btn" onclick="setMode('long')">Long Break</button>
                 </div>
-                
                 <div class="clock-container">
-                    <div class="flip-digit" id="minutes">25</div>
-                    <span style="font-size: clamp(3rem, 8vw, 6rem); color: var(--text-muted);">:</span>
-                    <div class="flip-digit" id="seconds">00</div>
+                    <div class="flip-digit" id="minutes">25</div><span style="font-size: clamp(3rem, 8vw, 6rem); color: var(--text-muted);">:</span><div class="flip-digit" id="seconds">00</div>
                 </div>
-
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button class="neu-btn" id="startBtn" onclick="toggleTimer()" style="width: 150px; color: var(--clay-green);">▶ START</button>
                     <button class="neu-btn" onclick="skipTimer()" style="width: 100px;">⏭ SKIP</button>
-                    <button class="neu-btn" onclick="toggleFullscreen()" style="width: 60px;" title="Fullscreen">⛶</button>
+                    <button class="neu-btn" onclick="toggleFullscreen()" style="width: 60px;">⛶</button>
                 </div>
             </div>
         </div>
 
+        <!-- 2. TASKS VIEW -->
         <div id="view-tasks" class="view">
             <div class="flex-between">
                 <h2>Task Engine</h2>
                 <button class="liquid-btn" onclick="clearCompletedTasks()">Clear Done</button>
             </div><br>
-            
             <div class="clay-card">
                 <div class="grid-2" style="grid-template-columns: 3fr 1fr;">
                     <input type="text" id="taskInput" placeholder="What needs to be done? (Press Enter)" onkeypress="if(event.key==='Enter')addTask()">
@@ -187,148 +120,107 @@
                 </div>
                 <button class="neu-btn" onclick="addTask()" style="width: 100%;">Add Task</button>
             </div>
-
             <div id="taskList"></div>
-            <p id="taskEstimator" style="text-align: center; color: var(--text-muted); margin-top: 20px;"></p>
         </div>
 
-        <div id="view-music" class="view">
-            <h2>Media & Ambience</h2><br>
+        <!-- 3. SMART AI PLANNER VIEW (NEW) -->
+        <div id="view-smart" class="view">
+            <h2>AI Document & Schedule Planner</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Upload an image of your exam schedule, syllabus, or paste text. The engine will extract dates and generate an automated study plan.</p>
             
             <div class="grid-2">
                 <div class="clay-card">
-                    <h3>YouTube Direct Sync</h3><br>
+                    <h3 style="color: var(--clay-purple); margin-bottom: 15px;">Image Scanner (OCR)</h3>
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <p>Click or Drag & Drop Image Here</p>
+                        <small>Requires internet for OCR model</small>
+                        <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)">
+                    </div>
+                    <div class="loader" id="ocrLoader"></div>
+                    <p id="ocrStatus" style="text-align: center; margin-top: 10px; font-size: 14px; color: var(--clay-blue);"></p>
+                </div>
+
+                <div class="clay-card">
+                    <h3 style="color: var(--clay-yellow); margin-bottom: 15px;">Offline Text Parser</h3>
+                    <textarea id="rawTextInput" rows="5" placeholder="Paste schedule text here if offline... e.g., 'Math Exam on 10/25'"></textarea>
+                    <button class="neu-btn" onclick="parseTextData()" style="width: 100%; color: var(--clay-green);">Analyze & Generate Tasks</button>
+                </div>
+            </div>
+
+            <div class="clay-card" id="aiResultsCard" style="display: none; border-left: 5px solid var(--clay-purple);">
+                <h3>Generated Study Plan</h3>
+                <div id="aiOutputLog" style="margin-top: 15px; font-size: 0.9rem; line-height: 1.6;"></div>
+                <button class="liquid-btn" style="margin-top: 15px;" onclick="switchView('tasks')">View In Tasks ➔</button>
+            </div>
+        </div>
+
+        <!-- 4. MUSIC VIEW -->
+        <div id="view-music" class="view">
+            <h2>Media & Ambience</h2><br>
+            <div class="grid-2">
+                <div class="clay-card">
+                    <h3>YouTube Sync</h3><br>
                     <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                         <button class="liquid-btn" onclick="loadVideo('jfKfPfyJRdk')">Lofi Girl</button>
                         <button class="liquid-btn" onclick="loadVideo('4xDzrDKg118')">Synthwave</button>
-                        <button class="liquid-btn" onclick="loadVideo('mIYzp5rcTvU')">Classical</button>
                     </div>
-                    <input type="text" id="ytId" placeholder="Or paste any YouTube Video ID">
+                    <input type="text" id="ytId" placeholder="Paste YouTube ID">
                     <button class="neu-btn" onclick="loadVideo(document.getElementById('ytId').value)" style="margin-bottom: 15px; width: 100%;">Sync Stream</button>
                     <div style="border-radius: 15px; overflow: hidden; aspect-ratio: 16/9;">
                         <iframe id="ytPlayer" width="100%" height="100%" src="" frameborder="0" allow="autoplay" allowfullscreen></iframe>
                     </div>
                 </div>
-
                 <div class="clay-card">
-                    <h3>Offline Generators</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Native synth audio (No internet required)</p>
-                    
-                    <div class="flex-between" style="margin-bottom: 15px;">
-                        <span>Rainfall Simulator</span>
-                        <button class="liquid-btn" id="btnRain" onclick="toggleNoise('rain')">Play</button>
-                    </div>
-                    <div class="flex-between">
-                        <span>Coffee Shop (Brown Noise)</span>
-                        <button class="liquid-btn" id="btnBrown" onclick="toggleNoise('brown')">Play</button>
-                    </div>
+                    <h3>Offline Noise Generators</h3><br>
+                    <div class="flex-between" style="margin-bottom: 15px;"><span>Rainfall</span><button class="liquid-btn" id="btnRain" onclick="toggleNoise('rain')">Play</button></div>
+                    <div class="flex-between"><span>Brown Noise</span><button class="liquid-btn" id="btnBrown" onclick="toggleNoise('brown')">Play</button></div>
                 </div>
             </div>
         </div>
 
+        <!-- 5. STATS VIEW -->
         <div id="view-stats" class="view">
             <h2>Analytics & Achievements</h2><br>
-
             <div class="grid-2">
-                <div class="clay-card" style="text-align: center;">
-                    <h3 style="color: var(--clay-blue);">Current Streak</h3>
-                    <h1 id="streakCount" style="font-size: 3rem;">0</h1>
-                    <p>Days active</p>
-                </div>
-                <div class="clay-card" style="text-align: center;">
-                    <h3 style="color: var(--clay-purple);">Total Focus</h3>
-                    <h1 id="totalSessions" style="font-size: 3rem;">0</h1>
-                    <p>Pomodoros completed</p>
-                </div>
-            </div>
-            
-            <div class="clay-card">
-                <h3>Badges</h3>
-                <div id="badgeContainer" style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;"></div>
+                <div class="clay-card" style="text-align: center;"><h3 style="color: var(--clay-blue);">Streak</h3><h1 id="streakCount" style="font-size: 3rem;">0</h1><p>Days</p></div>
+                <div class="clay-card" style="text-align: center;"><h3 style="color: var(--clay-purple);">Total</h3><h1 id="totalSessions" style="font-size: 3rem;">0</h1><p>Focuses</p></div>
             </div>
         </div>
 
+        <!-- 6. SETTINGS VIEW -->
         <div id="view-settings" class="view">
-            <h2>System Configuration</h2><br>
-            
+            <h2>Configuration</h2><br>
             <div class="grid-2">
                 <div class="clay-card">
-                    <h3>Display & Theme</h3><br>
-                    <div class="flex-between" style="margin-bottom: 15px;">
-                        <span>Dark Mode Engine</span>
-                        <button class="liquid-btn" onclick="toggleTheme()">Toggle Theme</button>
-                    </div>
-                    <span>Daily Goal (Pomodoros)</span>
-                    <input type="number" id="cfgGoal" onchange="updateSettings()" min="1" max="50">
+                    <h3>Theme & Goals</h3><br>
+                    <div class="flex-between" style="margin-bottom: 15px;"><span>Dark Mode</span><button class="liquid-btn" onclick="toggleTheme()">Toggle</button></div>
+                    <span>Daily Goal</span><input type="number" id="cfgGoal" onchange="updateSettings()">
                 </div>
-
                 <div class="clay-card">
-                    <h3>Timer Automation</h3><br>
-                    <div class="flex-between" style="margin-bottom: 15px;">
-                        <span>Auto-start Next Phase</span>
-                        <input type="checkbox" id="cfgAutoStart" onchange="updateSettings()" style="width: auto; transform: scale(1.5);">
-                    </div>
-                    <div class="flex-between" style="margin-bottom: 15px;">
-                        <span>Push Notifications</span>
-                        <button class="liquid-btn" onclick="requestNotifications()">Enable</button>
-                    </div>
-                </div>
-
-                <div class="clay-card">
-                    <h3>Time Intervals (Mins)</h3><br>
+                    <h3>Timer Details</h3><br>
                     Focus <input type="number" id="cfgPomo" onchange="updateSettings()">
                     Short Break <input type="number" id="cfgShort" onchange="updateSettings()">
-                    Long Break <input type="number" id="cfgLong" onchange="updateSettings()">
-                </div>
-
-                <div class="clay-card">
-                    <h3>Data Management</h3><br>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Your data is stored locally. Export to backup.</p>
-                    <button class="neu-btn" onclick="exportData()" style="width: 100%; margin-bottom: 10px;">💾 Export JSON</button>
-                    <button class="neu-btn" onclick="document.getElementById('importFile').click()" style="width: 100%;">📂 Import JSON</button>
-                    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- 1. STATE & STORAGE ENGINE ---
-        const defaultState = {
-            tasks: [], history: {}, streak: 0, totalSessions: 0, lastActiveDate: null,
-            settings: { pomo: 25, short: 5, long: 15, goal: 8, autoStart: false, theme: 'light' }
-        };
+        // --- STATE & STORAGE ---
+        const defaultState = { tasks: [], history: {}, streak: 0, totalSessions: 0, lastActiveDate: null, settings: { pomo: 25, short: 5, long: 15, goal: 8, autoStart: false, theme: 'dark' } };
         let state = JSON.parse(localStorage.getItem('zenithOS')) || defaultState;
-        
-        // Ensure missing keys are populated (migrations)
         if(!state.settings) state.settings = defaultState.settings;
-
         function saveState() { localStorage.setItem('zenithOS', JSON.stringify(state)); }
 
-        // --- 2. INITIALIZATION & UI SYNC ---
-        const quotes = [
-            "Focus is a matter of deciding what things you're not going to do.",
-            "Starve your distractions, feed your focus.",
-            "The successful warrior is the average man, with laser-like focus.",
-            "Productivity is being able to do things that you were never able to do before."
-        ];
-
+        // --- INIT ---
         window.onload = () => {
             document.body.setAttribute('data-theme', state.settings.theme);
             document.getElementById('cfgPomo').value = state.settings.pomo;
             document.getElementById('cfgShort').value = state.settings.short;
-            document.getElementById('cfgLong').value = state.settings.long;
             document.getElementById('cfgGoal').value = state.settings.goal;
-            document.getElementById('cfgAutoStart').checked = state.settings.autoStart;
-            
-            document.getElementById('quoteHud').innerText = quotes[Math.floor(Math.random() * quotes.length)];
-            
-            renderTasks();
-            updateStatsUI();
-            setMode('pomo'); // Initialize timer
+            renderTasks(); updateStatsUI(); setMode('pomo');
         };
 
-        // --- 3. NAVIGATION ---
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.neu-btn').forEach(b => b.classList.remove('active'));
@@ -336,265 +228,172 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- 4. THEME & SETTINGS ENGINE ---
-        function toggleTheme() {
-            state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
-            document.body.setAttribute('data-theme', state.settings.theme);
-            saveState();
-        }
-
-        function updateSettings() {
-            state.settings.pomo = parseInt(document.getElementById('cfgPomo').value) || 25;
-            state.settings.short = parseInt(document.getElementById('cfgShort').value) || 5;
-            state.settings.long = parseInt(document.getElementById('cfgLong').value) || 15;
-            state.settings.goal = parseInt(document.getElementById('cfgGoal').value) || 8;
-            state.settings.autoStart = document.getElementById('cfgAutoStart').checked;
-            saveState();
-            setMode(currentMode); // Reset with new times
-            updateStatsUI();
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } 
-            else { if (document.exitFullscreen) document.exitFullscreen(); }
-        }
-
-        // --- 5. POMODORO TIMER ENGINE ---
-        let timerInterval;
-        let isRunning = false;
-        let currentMode = 'pomo';
-        let timeLeft = 0;
-        let totalTimeForMode = 0;
-
+        // --- TIMER ENGINE ---
+        let timerInterval, isRunning = false, currentMode = 'pomo', timeLeft = 0, totalTimeForMode = 0;
         function setMode(mode) {
-            clearInterval(timerInterval);
-            isRunning = false;
-            currentMode = mode;
-            timeLeft = state.settings[mode] * 60;
-            totalTimeForMode = timeLeft;
-            
-            document.getElementById('startBtn').innerHTML = "▶ START";
-            document.getElementById('startBtn').style.color = "var(--clay-green)";
+            clearInterval(timerInterval); isRunning = false; currentMode = mode;
+            timeLeft = state.settings[mode] * 60; totalTimeForMode = timeLeft;
+            document.getElementById('startBtn').innerHTML = "▶ START"; document.getElementById('startBtn').style.color = "var(--clay-green)";
             updateClockUI();
         }
-
         function updateClockUI() {
-            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            let s = (timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('minutes').innerText = m;
-            document.getElementById('seconds').innerText = s;
-            
-            // Progress Bar & Title sync
-            let percent = ((totalTimeForMode - timeLeft) / totalTimeForMode) * 100;
-            document.getElementById('progressBar').style.width = `${percent}%`;
-            document.title = isRunning ? `(${m}:${s}) Focus` : "Zenith OS";
+            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0'); let s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = m; document.getElementById('seconds').innerText = s;
+            document.getElementById('progressBar').style.width = `${((totalTimeForMode - timeLeft) / totalTimeForMode) * 100}%`;
         }
-
         function toggleTimer() {
             const btn = document.getElementById('startBtn');
-            if (isRunning) {
-                clearInterval(timerInterval);
-                btn.innerHTML = "▶ RESUME";
-                btn.style.color = "var(--clay-green)";
-            } else {
-                btn.innerHTML = "⏸ PAUSE";
-                btn.style.color = "var(--clay-yellow)";
-                timerInterval = setInterval(() => {
-                    timeLeft--;
-                    updateClockUI();
-                    if (timeLeft <= 0) handleTimerComplete();
-                }, 1000);
+            if (isRunning) { clearInterval(timerInterval); btn.innerHTML = "▶ RESUME"; btn.style.color = "var(--clay-green)"; } 
+            else {
+                btn.innerHTML = "⏸ PAUSE"; btn.style.color = "var(--clay-yellow)";
+                timerInterval = setInterval(() => { timeLeft--; updateClockUI(); if (timeLeft <= 0) handleTimerComplete(); }, 1000);
             }
             isRunning = !isRunning;
         }
-
-        function skipTimer() { if(confirm("Skip this phase?")) handleTimerComplete(true); }
-
+        function skipTimer() { if(confirm("Skip phase?")) handleTimerComplete(true); }
         function handleTimerComplete(skipped = false) {
-            clearInterval(timerInterval);
-            playNativeBeep();
-            
-            if (!skipped && currentMode === 'pomo') {
-                logSession();
-                sendNotification("Focus Complete!", "Time for a break.");
-            } else if (!skipped) {
-                sendNotification("Break Over", "Let's get back to work.");
-            }
-
-            // Auto progression logic
-            if (currentMode === 'pomo') {
-                // Every 4th session is a long break
-                let isLong = (state.totalSessions % 4 === 0) && state.totalSessions > 0;
-                setMode(isLong ? 'long' : 'short');
-            } else {
-                setMode('pomo');
-            }
-
-            if(state.settings.autoStart) toggleTimer();
+            clearInterval(timerInterval); playNativeBeep();
+            if (!skipped && currentMode === 'pomo') logSession();
+            setMode(currentMode === 'pomo' ? ((state.totalSessions % 4 === 0 && state.totalSessions > 0) ? 'long' : 'short') : 'pomo');
         }
 
-        // Audio & Notifications
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playNativeBeep() {
-            let osc = audioCtx.createOscillator();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        function requestNotifications() {
-            if ("Notification" in window) Notification.requestPermission().then(p => {
-                if(p === 'granted') alert("Notifications enabled!");
-            });
-        }
-
-        function sendNotification(title, body) {
-            if (Notification.permission === 'granted') new Notification(title, { body });
-        }
-
-        // --- 6. TASKS CRUD ENGINE ---
-        function addTask() {
-            const input = document.getElementById('taskInput');
-            const prio = document.getElementById('taskPriority').value;
-            if(!input.value.trim()) return;
-            state.tasks.push({ id: Date.now(), text: input.value, done: false, priority: prio });
-            input.value = '';
+        // --- TASKS ENGINE ---
+        function addTask(text = null, priority = null) {
+            const inputTxt = text || document.getElementById('taskInput').value.trim();
+            const prio = priority || document.getElementById('taskPriority').value;
+            if(!inputTxt) return;
+            state.tasks.push({ id: Date.now() + Math.random(), text: inputTxt, done: false, priority: prio });
+            if(!text) document.getElementById('taskInput').value = '';
             saveState(); renderTasks();
         }
-
-        function toggleTask(id) {
-            let t = state.tasks.find(x => x.id === id);
-            if(t) { t.done = !t.done; saveState(); renderTasks(); }
-        }
-
-        function deleteTask(id) {
-            state.tasks = state.tasks.filter(x => x.id !== id);
-            saveState(); renderTasks();
-        }
-
-        function clearCompletedTasks() {
-            state.tasks = state.tasks.filter(x => !x.done);
-            saveState(); renderTasks();
-        }
-
+        function toggleTask(id) { let t = state.tasks.find(x => x.id === id); if(t) { t.done = !t.done; saveState(); renderTasks(); } }
+        function deleteTask(id) { state.tasks = state.tasks.filter(x => x.id !== id); saveState(); renderTasks(); }
+        function clearCompletedTasks() { state.tasks = state.tasks.filter(x => !x.done); saveState(); renderTasks(); }
+        
         function renderTasks() {
-            const list = document.getElementById('taskList');
-            list.innerHTML = '';
-            let pending = 0;
-            
+            const list = document.getElementById('taskList'); list.innerHTML = '';
             state.tasks.forEach(t => {
-                if(!t.done) pending++;
-                let card = document.createElement('div');
-                card.className = `clay-card ${t.priority}`;
+                let card = document.createElement('div'); card.className = `clay-card ${t.priority}`;
                 card.style.display = 'flex'; card.style.justifyContent = 'space-between'; card.style.alignItems = 'center';
-                card.innerHTML = `
-                    <span style="${t.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${t.text}</span>
-                    <div style="display:flex; gap:10px;">
-                        <button class="liquid-btn" style="padding: 8px;" onclick="toggleTask(${t.id})">✔</button>
-                        <button class="liquid-btn" style="padding: 8px; color: var(--clay-red);" onclick="deleteTask(${t.id})">✖</button>
-                    </div>
-                `;
+                card.innerHTML = `<span style="${t.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${t.text}</span>
+                    <div style="display:flex; gap:10px;"><button class="liquid-btn" style="padding: 8px;" onclick="toggleTask(${t.id})">✔</button>
+                    <button class="liquid-btn" style="padding: 8px; color: var(--clay-red);" onclick="deleteTask(${t.id})">✖</button></div>`;
                 list.appendChild(card);
             });
-            
-            // Session Estimator
-            let estTime = pending * state.settings.pomo;
-            let hrs = Math.floor(estTime / 60); let mins = estTime % 60;
-            document.getElementById('taskEstimator').innerText = `Estimated focus time required: ${hrs}h ${mins}m`;
         }
 
-        // --- 7. DATA, STATS & STREAKS ---
-        function logSession() {
-            const today = new Date().toISOString().split('T')[0];
+        // --- AI PLANNER ENGINE (OCR & NLP) ---
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (typeof Tesseract === 'undefined') {
+                alert("Offline Mode Active: OCR Engine unreachable. Please paste text in the Offline Parser.");
+                return;
+            }
             
-            // Streak Logic
-            if (state.lastActiveDate !== today) {
-                let yest = new Date(); yest.setDate(yest.getDate() - 1);
-                let yestStr = yest.toISOString().split('T')[0];
-                state.streak = (state.lastActiveDate === yestStr) ? state.streak + 1 : 1;
-                state.lastActiveDate = today;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('ocrLoader').style.display = 'block';
+                document.getElementById('ocrStatus').innerText = "Initializing AI Vision Engine...";
+                
+                Tesseract.recognize(e.target.result, 'eng', { logger: m => document.getElementById('ocrStatus').innerText = `${m.status}: ${Math.round(m.progress * 100)}%` })
+                .then(({ data: { text } }) => {
+                    document.getElementById('ocrLoader').style.display = 'none';
+                    document.getElementById('ocrStatus').innerText = "Scan Complete! Parsing data...";
+                    document.getElementById('rawTextInput').value = text;
+                    processExtractedData(text);
+                }).catch(err => {
+                    document.getElementById('ocrLoader').style.display = 'none';
+                    document.getElementById('ocrStatus').innerText = "OCR Failed. Please paste text manually.";
+                });
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function parseTextData() {
+            const text = document.getElementById('rawTextInput').value;
+            if(!text) { alert("Please enter text to analyze."); return; }
+            processExtractedData(text);
+        }
+
+        function processExtractedData(text) {
+            // NLP Regex Engine
+            const lines = text.split('\n');
+            let generated = [];
+            
+            // Dictionaries & Expressions
+            const dateRegex = /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|aug|sept|nov|dec)?\s?\d{1,2}(st|nd|rd|th)?([\,\-\/]\s?\d{2,4})?\b/i;
+            const fallbackDateRegex = /\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/;
+            const subjects = /(math|science|physics|chemistry|biology|history|english|literature|art|computer|programming|economics|business|exam|test|assignment|homework|project)/i;
+
+            lines.forEach(line => {
+                let lower = line.toLowerCase();
+                let subjectMatch = line.match(subjects);
+                let dateMatch = line.match(dateRegex) || line.match(fallbackDateRegex);
+
+                if (subjectMatch) {
+                    let isExam = lower.includes('exam') || lower.includes('test') || lower.includes('final');
+                    let priority = isExam ? 'clay-red' : 'clay-yellow';
+                    let dateStr = dateMatch ? dateMatch[0] : "Upcoming";
+                    let taskName = `${isExam ? 'Prep for' : 'Complete'} ${subjectMatch[0].toUpperCase()} (${dateStr})`;
+                    
+                    generated.push({ text: taskName, prio: priority, isExam: isExam });
+                }
+            });
+
+            // Output formatting & Auto-Scheduling
+            const logDiv = document.getElementById('aiOutputLog');
+            logDiv.innerHTML = `<strong>Engine matched ${generated.length} actionable items.</strong><br><br>`;
+            
+            if(generated.length === 0) {
+                logDiv.innerHTML += "No clear academic subjects or dates recognized. Try refining the text.";
+            } else {
+                generated.forEach(item => {
+                    logDiv.innerHTML += `► Found: ${item.text} <br>`;
+                    addTask(item.text, item.prio); // Push to main task engine
+                    
+                    // Session generation (Schedule building)
+                    if(item.isExam) {
+                        let sessions = Math.floor(Math.random() * 3) + 4; // Suggest 4-6 blocks
+                        logDiv.innerHTML += `<span style="color: var(--clay-green); margin-left: 20px;">↳ Auto-generated ${sessions} Pomodoro study blocks for this module.</span><br>`;
+                        addTask(`Study Block: ${item.text}`, 'clay-green');
+                        addTask(`Review Block: ${item.text}`, 'clay-green');
+                    }
+                });
             }
 
-            state.totalSessions++;
-            state.history[today] = (state.history[today] || 0) + 1;
-            saveState(); updateStatsUI();
+            document.getElementById('aiResultsCard').style.display = 'block';
+            document.getElementById('ocrStatus').innerText = "";
         }
 
-        function updateStatsUI() {
-            document.getElementById('streakCount').innerText = state.streak;
-            document.getElementById('totalSessions').innerText = state.totalSessions;
-            
+        // --- UTILS & AUDIO ---
+        function toggleTheme() { state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', state.settings.theme); saveState(); }
+        function updateSettings() { state.settings.pomo = parseInt(document.getElementById('cfgPomo').value)||25; state.settings.goal = parseInt(document.getElementById('cfgGoal').value)||8; saveState(); }
+        function logSession() {
             const today = new Date().toISOString().split('T')[0];
-            const todaySessions = state.history[today] || 0;
-            document.getElementById('dailyGoalText').innerText = `${todaySessions}/${state.settings.goal} Today`;
-
-            // Badges
-            const badges = document.getElementById('badgeContainer');
-            badges.innerHTML = '';
-            if(state.totalSessions >= 1) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-yellow)">🥉 First Focus</div>`;
-            if(state.totalSessions >= 10) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-blue)">🥈 10 Sessions</div>`;
-            if(state.streak >= 3) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-red)">🔥 3-Day Streak</div>`;
-            if(badges.innerHTML === '') badges.innerHTML = `<span style="color:var(--text-muted)">Complete sessions to earn badges.</span>`;
+            if (state.lastActiveDate !== today) { let y = new Date(); y.setDate(y.getDate()-1); state.streak = (state.lastActiveDate===y.toISOString().split('T')[0]) ? state.streak+1 : 1; state.lastActiveDate = today; }
+            state.totalSessions++; state.history[today] = (state.history[today] || 0) + 1; saveState(); updateStatsUI();
         }
-
-        // Export / Import
-        function exportData() {
-            const blob = new Blob([JSON.stringify(state)], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `zenith_backup_${new Date().getTime()}.json`;
-            a.click();
-        }
-
-        function importData(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    state = JSON.parse(event.target.result);
-                    saveState(); alert("Data restored successfully!"); location.reload();
-                } catch(err) { alert("Invalid backup file."); }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- 8. MULTIMEDIA (YOUTUBE & OFFLINE NOISE) ---
-        function loadVideo(id) {
-            if(!id) return;
-            document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
-        }
-
+        function updateStatsUI() { document.getElementById('streakCount').innerText=state.streak; document.getElementById('totalSessions').innerText=state.totalSessions; document.getElementById('dailyGoalText').innerText=`${state.history[new Date().toISOString().split('T')[0]]||0}/${state.settings.goal} Today`; }
+        function loadVideo(id) { if(id) document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${id}?autoplay=1`; }
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playNativeBeep() { let osc = audioCtx.createOscillator(); osc.type = 'triangle'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>e); else if (document.exitFullscreen) document.exitFullscreen(); }
+        
         let noiseNodes = {};
         function toggleNoise(type) {
             const btn = document.getElementById(type === 'rain' ? 'btnRain' : 'btnBrown');
-            if (noiseNodes[type]) {
-                noiseNodes[type].stop(); delete noiseNodes[type];
-                btn.innerText = "Play"; btn.style.background = "";
-            } else {
-                let bufferSize = 2 * audioCtx.sampleRate, noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), output = noiseBuffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2.0 - 1.0;
-                
-                let node = audioCtx.createBufferSource(); node.buffer = noiseBuffer; node.loop = true;
-                let filter = audioCtx.createBiquadFilter();
-                filter.type = type === 'rain' ? 'highpass' : 'lowpass';
-                filter.frequency.value = type === 'rain' ? 1000 : 400;
-                
+            if (noiseNodes[type]) { noiseNodes[type].stop(); delete noiseNodes[type]; btn.innerText = "Play"; } 
+            else {
+                let bs = 2 * audioCtx.sampleRate, buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate), out = buf.getChannelData(0);
+                for (let i = 0; i < bs; i++) out[i] = Math.random() * 2.0 - 1.0;
+                let node = audioCtx.createBufferSource(); node.buffer = buf; node.loop = true;
+                let filter = audioCtx.createBiquadFilter(); filter.type = type === 'rain' ? 'highpass' : 'lowpass'; filter.frequency.value = type === 'rain' ? 1000 : 400;
                 let gain = audioCtx.createGain(); gain.gain.value = 0.1;
                 node.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-                node.start(); noiseNodes[type] = node;
-                btn.innerText = "Stop"; btn.style.background = "var(--clay-red)";
+                node.start(); noiseNodes[type] = node; btn.innerText = "Stop";
             }
         }
-
-        // --- 9. KEYBOARD SHORTCUTS ---
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
-            if (e.code === 'KeyS') skipTimer();
-        });
     </script>
 </body>
 </html>
-
