@@ -2,481 +2,598 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Pomodoro Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zenith Pomodoro OS</title>
     <style>
-        /* --- CSS VARIABLES & THEMING --- */
+        /* --- CORE THEME ENGINE --- */
         :root {
-            --bg-color: #e0e5ec;
+            /* Light Theme Defaults */
+            --bg-main: #e0e5ec;
+            --surface: #e0e5ec;
             --text-main: #2d3436;
-            --text-light: #636e72;
+            --text-muted: #636e72;
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --glass-bg: rgba(255, 255, 255, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.4);
             
-            /* Multi-colors for Claymorphism */
+            /* Claymorphism Accents */
             --clay-red: #ff7675;
             --clay-green: #55efc4;
             --clay-blue: #74b9ff;
             --clay-purple: #a29bfe;
             --clay-yellow: #ffeaa7;
-
-            /* Neumorphic Shadows */
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        [data-theme="dark"] {
+            --bg-main: #1a1b1e;
+            --surface: #1a1b1e;
+            --text-main: #e4e5e7;
+            --text-muted: #8c8f96;
+            --shadow-light: #25272b;
+            --shadow-dark: #0f1012;
+            --glass-bg: rgba(0, 0, 0, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            
+            --clay-red: #d63031;
+            --clay-green: #00b894;
+            --clay-blue: #0984e3;
+            --clay-purple: #6c5ce7;
+            --clay-yellow: #fdcb6e;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; transition: background 0.3s, color 0.3s, box-shadow 0.3s; }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-main);
             color: var(--text-main);
             display: flex;
             height: 100vh;
             overflow: hidden;
+            flex-direction: row;
         }
 
-        /* --- NEUMORPHIC SIDEBAR --- */
+        /* --- RESPONSIVE LAYOUT --- */
         nav {
-            width: 250px;
-            background: var(--bg-color);
-            padding: 2rem 1rem;
-            box-shadow: 9px 0px 16px rgba(163, 177, 198, 0.6), 
-                        -9px 0px 16px rgba(255, 255, 255, 0.5);
-            z-index: 10;
+            width: 260px;
+            background: var(--surface);
+            padding: 2rem 1.5rem;
+            box-shadow: 8px 0px 20px var(--shadow-dark), -8px 0px 20px var(--shadow-light);
+            z-index: 100;
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
 
-        .nav-btn {
-            background: var(--bg-color);
-            border: none;
-            padding: 1rem;
-            border-radius: 15px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--text-light);
-            cursor: pointer;
-            box-shadow: 6px 6px 12px var(--shadow-dark), 
-                        -6px -6px 12px var(--shadow-light);
-        }
+        main { flex: 1; padding: 2rem; overflow-y: auto; position: relative; }
 
-        .nav-btn:active, .nav-btn.active {
-            color: var(--clay-blue);
-            box-shadow: inset 6px 6px 12px var(--shadow-dark), 
-                        inset -6px -6px 12px var(--shadow-light);
-        }
+        .view { display: none; animation: fadeIn 0.3s ease forwards; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- MAIN CONTAINER --- */
-        main {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            position: relative;
+        /* UI ELEMENTS */
+        .neu-btn {
+            background: var(--surface); border: none; padding: 1rem; border-radius: 15px; font-size: 1rem; font-weight: 700; color: var(--text-muted); cursor: pointer;
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-
-        .view {
-            display: none;
-            animation: fadeIn 0.4s ease forwards;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- LIQUID GLASS CONTROLS --- */
+        .neu-btn:active, .neu-btn.active { color: var(--clay-blue); box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light); }
+        
         .glass-panel {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); position: relative; overflow: hidden;
         }
 
-        .glass-btn {
-            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.5);
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--text-main);
+        .liquid-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
+            padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; color: var(--text-main);
         }
-        
-        .glass-btn:hover {
-            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
-            transform: translateY(-2px);
-        }
+        .liquid-btn:hover { background: var(--clay-blue); color: #fff; transform: translateY(-2px); }
 
-        /* --- JUMBO FLIP CLOCK (Minimalist implementation) --- */
-        .clock-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            margin: 3rem 0;
-        }
-
+        /* JUMBO CLOCK & PROGRESS */
+        .clock-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 3rem 0; font-variant-numeric: tabular-nums; }
         .flip-digit {
-            background: var(--text-main);
-            color: #fff;
-            font-size: 8rem;
-            font-weight: 900;
-            padding: 1rem 2rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3), 
-                        inset 0 5px 15px rgba(255,255,255,0.2);
-            position: relative;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            background: var(--surface); color: var(--clay-blue); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; padding: 1rem 2rem; border-radius: 25px;
+            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light), inset 2px 2px 5px var(--glass-border); text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        .progress-bar-container { width: 100%; height: 10px; background: var(--shadow-dark); border-radius: 10px; overflow: hidden; margin-bottom: 20px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--clay-purple), var(--clay-blue)); transition: width 1s linear; }
 
-        .flip-digit::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: rgba(0,0,0,0.6);
-        }
-
-        /* --- CLAYMORPHISM TASKS & ELEMENTS --- */
+        /* CLAYMORPHIC CARDS */
         .clay-card {
-            background: var(--bg-color);
-            border-radius: 25px;
-            padding: 1.5rem;
-            box-shadow: 8px 8px 16px var(--shadow-dark), 
-                        -8px -8px 16px var(--shadow-light),
-                        inset 4px 4px 10px rgba(255,255,255,0.6),
-                        inset -4px -4px 10px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
+            background: var(--surface); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), inset 2px 2px 5px var(--glass-border);
+        }
+        .clay-red { border-left: 5px solid var(--clay-red); }
+        .clay-yellow { border-left: 5px solid var(--clay-yellow); }
+        .clay-green { border-left: 5px solid var(--clay-green); }
+
+        input, select {
+            width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--surface); color: var(--text-main);
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); outline: none; margin-bottom: 15px;
         }
 
-        .clay-card.red { background: var(--clay-red); color: white; }
-        .clay-card.green { background: var(--clay-green); color: var(--text-main); }
-        .clay-card.blue { background: var(--clay-blue); color: white; }
-        .clay-card.purple { background: var(--clay-purple); color: white; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .quote-hud { text-align: center; font-style: italic; color: var(--text-muted); margin-bottom: 20px; }
 
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 15px;
-            background: var(--bg-color);
-            box-shadow: inset 6px 6px 12px var(--shadow-dark), 
-                        inset -6px -6px 12px var(--shadow-light);
-            outline: none;
-            margin-bottom: 15px;
+        /* MEDIA QUERIES FOR MOBILE */
+        @media (max-width: 768px) {
+            body { flex-direction: column-reverse; }
+            nav { width: 100%; height: 80px; flex-direction: row; justify-content: space-around; padding: 10px; border-radius: 20px 20px 0 0; z-index: 1000; overflow-x: auto;}
+            nav h2, nav small { display: none; }
+            .neu-btn { padding: 10px; font-size: 0.8rem; flex-direction: column; gap: 5px; border-radius: 10px; }
+            main { padding: 1rem; padding-bottom: 90px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .clock-container { margin: 1.5rem 0; }
         }
-
-        /* --- CALENDAR GRID --- */
-        .calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .cal-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: var(--bg-color);
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            font-weight: bold;
-        }
-        
-        .cal-day.active {
-            background: var(--clay-green);
-            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.5);
-            color: var(--text-main);
-        }
-
-        /* --- STATS GRID --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .stat-box {
-            text-align: center;
-        }
-        
-        .stat-box h1 {
-            font-size: 4rem;
-            margin: 10px 0;
-        }
-
     </style>
 </head>
-<body>
+<body data-theme="light">
 
     <nav>
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h2>Pomodoro UI</h2>
-            <small>Offline Engine</small>
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h2>Zenith OS</h2>
+            <small id="dailyGoalText">0/4 Sessions Today</small>
         </div>
-        <button class="nav-btn active" onclick="switchView('timer')">Focus Timer</button>
-        <button class="nav-btn" onclick="switchView('tasks')">Task Flow</button>
-        <button class="nav-btn" onclick="switchView('stats'); renderStats();">Streaks & Cal</button>
-        <button class="nav-btn" onclick="switchView('music')">YouTube Music</button>
+        <button class="neu-btn active" onclick="switchView('timer')">⏱️ Timer</button>
+        <button class="neu-btn" onclick="switchView('tasks')">📋 Tasks</button>
+        <button class="neu-btn" onclick="switchView('music')">🎵 Media</button>
+        <button class="neu-btn" onclick="switchView('stats')">📈 Stats</button>
+        <button class="neu-btn" onclick="switchView('settings')">⚙️ Config</button>
     </nav>
 
-    <main>
+    <main id="mainContent">
         <div id="view-timer" class="view active">
+            <div class="quote-hud" id="quoteHud">"Focus is a matter of deciding what things you're not going to do."</div>
+            
             <div class="glass-panel" style="text-align: center;">
-                <div>
-                    <button class="glass-btn" onclick="setMode('pomo')">Pomodoro (25m)</button>
-                    <button class="glass-btn" onclick="setMode('short')">Short Break (5m)</button>
-                    <button class="glass-btn" onclick="setMode('long')">Long Break (15m)</button>
+                <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+                
+                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <button class="liquid-btn" onclick="setMode('pomo')">Pomodoro</button>
+                    <button class="liquid-btn" onclick="setMode('short')">Short Break</button>
+                    <button class="liquid-btn" onclick="setMode('long')">Long Break</button>
                 </div>
                 
                 <div class="clock-container">
                     <div class="flip-digit" id="minutes">25</div>
-                    <span style="font-size: 5rem; font-weight: bold; color: var(--text-light);">:</span>
+                    <span style="font-size: clamp(3rem, 8vw, 6rem); color: var(--text-muted);">:</span>
                     <div class="flip-digit" id="seconds">00</div>
                 </div>
 
-                <div>
-                    <button class="glass-btn" id="startBtn" onclick="toggleTimer()">START</button>
-                    <button class="glass-btn" onclick="resetTimer()">RESET</button>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button class="neu-btn" id="startBtn" onclick="toggleTimer()" style="width: 150px; color: var(--clay-green);">▶ START</button>
+                    <button class="neu-btn" onclick="skipTimer()" style="width: 100px;">⏭ SKIP</button>
+                    <button class="neu-btn" onclick="toggleFullscreen()" style="width: 60px;" title="Fullscreen">⛶</button>
                 </div>
             </div>
         </div>
 
         <div id="view-tasks" class="view">
-            <h2>Task Manager</h2>
-            <p>Manage your workload offline.</p><br>
+            <div class="flex-between">
+                <h2>Task Engine</h2>
+                <button class="liquid-btn" onclick="clearCompletedTasks()">Clear Done</button>
+            </div><br>
             
             <div class="clay-card">
-                <input type="text" id="taskInput" placeholder="Enter a new task...">
-                <button class="glass-btn" onclick="addTask()">Add Task</button>
+                <div class="grid-2" style="grid-template-columns: 3fr 1fr;">
+                    <input type="text" id="taskInput" placeholder="What needs to be done? (Press Enter)" onkeypress="if(event.key==='Enter')addTask()">
+                    <select id="taskPriority">
+                        <option value="clay-red">High Priority</option>
+                        <option value="clay-yellow">Med Priority</option>
+                        <option value="clay-green" selected>Low Priority</option>
+                    </select>
+                </div>
+                <button class="neu-btn" onclick="addTask()" style="width: 100%;">Add Task</button>
             </div>
 
             <div id="taskList"></div>
-        </div>
-
-        <div id="view-stats" class="view">
-            <h2>Activity & Streaks</h2>
-            <p>Your data never leaves your device.</p><br>
-
-            <div class="stats-grid">
-                <div class="clay-card blue stat-box">
-                    <h3>Current Streak</h3>
-                    <h1 id="streakCount">0</h1>
-                    <p>Days in a row</p>
-                </div>
-                <div class="clay-card purple stat-box">
-                    <h3>Sessions Completed</h3>
-                    <h1 id="totalSessions">0</h1>
-                    <p>Total focuses</p>
-                </div>
-            </div>
-
-            <div class="clay-card">
-                <h3>Activity Heatmap (Last 14 Days)</h3>
-                <div class="calendar" id="calendarGrid"></div>
-            </div>
+            <p id="taskEstimator" style="text-align: center; color: var(--text-muted); margin-top: 20px;"></p>
         </div>
 
         <div id="view-music" class="view">
-            <h2>Background Music</h2>
-            <p>Load a YouTube lofi or focus stream.</p><br>
+            <h2>Media & Ambience</h2><br>
+            
+            <div class="grid-2">
+                <div class="clay-card">
+                    <h3>YouTube Direct Sync</h3><br>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="liquid-btn" onclick="loadVideo('jfKfPfyJRdk')">Lofi Girl</button>
+                        <button class="liquid-btn" onclick="loadVideo('4xDzrDKg118')">Synthwave</button>
+                        <button class="liquid-btn" onclick="loadVideo('mIYzp5rcTvU')">Classical</button>
+                    </div>
+                    <input type="text" id="ytId" placeholder="Or paste any YouTube Video ID">
+                    <button class="neu-btn" onclick="loadVideo(document.getElementById('ytId').value)" style="margin-bottom: 15px; width: 100%;">Sync Stream</button>
+                    <div style="border-radius: 15px; overflow: hidden; aspect-ratio: 16/9;">
+                        <iframe id="ytPlayer" width="100%" height="100%" src="" frameborder="0" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <div class="clay-card">
+                    <h3>Offline Generators</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Native synth audio (No internet required)</p>
+                    
+                    <div class="flex-between" style="margin-bottom: 15px;">
+                        <span>Rainfall Simulator</span>
+                        <button class="liquid-btn" id="btnRain" onclick="toggleNoise('rain')">Play</button>
+                    </div>
+                    <div class="flex-between">
+                        <span>Coffee Shop (Brown Noise)</span>
+                        <button class="liquid-btn" id="btnBrown" onclick="toggleNoise('brown')">Play</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-stats" class="view">
+            <h2>Analytics & Achievements</h2><br>
+
+            <div class="grid-2">
+                <div class="clay-card" style="text-align: center;">
+                    <h3 style="color: var(--clay-blue);">Current Streak</h3>
+                    <h1 id="streakCount" style="font-size: 3rem;">0</h1>
+                    <p>Days active</p>
+                </div>
+                <div class="clay-card" style="text-align: center;">
+                    <h3 style="color: var(--clay-purple);">Total Focus</h3>
+                    <h1 id="totalSessions" style="font-size: 3rem;">0</h1>
+                    <p>Pomodoros completed</p>
+                </div>
+            </div>
             
             <div class="clay-card">
-                <input type="text" id="ytId" placeholder="Paste YouTube Video ID (e.g., jfKfPfyJRdk)">
-                <button class="glass-btn" onclick="loadVideo()">Load Stream</button>
+                <h3>Badges</h3>
+                <div id="badgeContainer" style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;"></div>
             </div>
+        </div>
 
-            <div class="clay-card green" style="height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <iframe id="ytPlayer" width="100%" height="100%" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <div id="view-settings" class="view">
+            <h2>System Configuration</h2><br>
+            
+            <div class="grid-2">
+                <div class="clay-card">
+                    <h3>Display & Theme</h3><br>
+                    <div class="flex-between" style="margin-bottom: 15px;">
+                        <span>Dark Mode Engine</span>
+                        <button class="liquid-btn" onclick="toggleTheme()">Toggle Theme</button>
+                    </div>
+                    <span>Daily Goal (Pomodoros)</span>
+                    <input type="number" id="cfgGoal" onchange="updateSettings()" min="1" max="50">
+                </div>
+
+                <div class="clay-card">
+                    <h3>Timer Automation</h3><br>
+                    <div class="flex-between" style="margin-bottom: 15px;">
+                        <span>Auto-start Next Phase</span>
+                        <input type="checkbox" id="cfgAutoStart" onchange="updateSettings()" style="width: auto; transform: scale(1.5);">
+                    </div>
+                    <div class="flex-between" style="margin-bottom: 15px;">
+                        <span>Push Notifications</span>
+                        <button class="liquid-btn" onclick="requestNotifications()">Enable</button>
+                    </div>
+                </div>
+
+                <div class="clay-card">
+                    <h3>Time Intervals (Mins)</h3><br>
+                    Focus <input type="number" id="cfgPomo" onchange="updateSettings()">
+                    Short Break <input type="number" id="cfgShort" onchange="updateSettings()">
+                    Long Break <input type="number" id="cfgLong" onchange="updateSettings()">
+                </div>
+
+                <div class="clay-card">
+                    <h3>Data Management</h3><br>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Your data is stored locally. Export to backup.</p>
+                    <button class="neu-btn" onclick="exportData()" style="width: 100%; margin-bottom: 10px;">💾 Export JSON</button>
+                    <button class="neu-btn" onclick="document.getElementById('importFile').click()" style="width: 100%;">📂 Import JSON</button>
+                    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- OFFLINE STATE ENGINE (localStorage) ---
-        let state = JSON.parse(localStorage.getItem('pomoState')) || {
-            tasks: [],
-            history: {}, // Maps date string 'YYYY-MM-DD' to session count
-            lastActiveDate: null,
-            streak: 0,
-            totalSessions: 0
+        // --- 1. STATE & STORAGE ENGINE ---
+        const defaultState = {
+            tasks: [], history: {}, streak: 0, totalSessions: 0, lastActiveDate: null,
+            settings: { pomo: 25, short: 5, long: 15, goal: 8, autoStart: false, theme: 'light' }
+        };
+        let state = JSON.parse(localStorage.getItem('zenithOS')) || defaultState;
+        
+        // Ensure missing keys are populated (migrations)
+        if(!state.settings) state.settings = defaultState.settings;
+
+        function saveState() { localStorage.setItem('zenithOS', JSON.stringify(state)); }
+
+        // --- 2. INITIALIZATION & UI SYNC ---
+        const quotes = [
+            "Focus is a matter of deciding what things you're not going to do.",
+            "Starve your distractions, feed your focus.",
+            "The successful warrior is the average man, with laser-like focus.",
+            "Productivity is being able to do things that you were never able to do before."
+        ];
+
+        window.onload = () => {
+            document.body.setAttribute('data-theme', state.settings.theme);
+            document.getElementById('cfgPomo').value = state.settings.pomo;
+            document.getElementById('cfgShort').value = state.settings.short;
+            document.getElementById('cfgLong').value = state.settings.long;
+            document.getElementById('cfgGoal').value = state.settings.goal;
+            document.getElementById('cfgAutoStart').checked = state.settings.autoStart;
+            
+            document.getElementById('quoteHud').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            renderTasks();
+            updateStatsUI();
+            setMode('pomo'); // Initialize timer
         };
 
-        function saveState() {
-            localStorage.setItem('pomoState', JSON.stringify(state));
-        }
-
-        // --- NAVIGATION LOGIC ---
+        // --- 3. NAVIGATION ---
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.neu-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
-        // --- TIMER LOGIC ---
+        // --- 4. THEME & SETTINGS ENGINE ---
+        function toggleTheme() {
+            state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', state.settings.theme);
+            saveState();
+        }
+
+        function updateSettings() {
+            state.settings.pomo = parseInt(document.getElementById('cfgPomo').value) || 25;
+            state.settings.short = parseInt(document.getElementById('cfgShort').value) || 5;
+            state.settings.long = parseInt(document.getElementById('cfgLong').value) || 15;
+            state.settings.goal = parseInt(document.getElementById('cfgGoal').value) || 8;
+            state.settings.autoStart = document.getElementById('cfgAutoStart').checked;
+            saveState();
+            setMode(currentMode); // Reset with new times
+            updateStatsUI();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.log(e)); } 
+            else { if (document.exitFullscreen) document.exitFullscreen(); }
+        }
+
+        // --- 5. POMODORO TIMER ENGINE ---
         let timerInterval;
         let isRunning = false;
         let currentMode = 'pomo';
-        let timeLeft = 25 * 60;
-        
-        const modes = { pomo: 25 * 60, short: 5 * 60, long: 15 * 60 };
-
-        function updateClock() {
-            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            let s = (timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('minutes').innerText = m;
-            document.getElementById('seconds').innerText = s;
-        }
+        let timeLeft = 0;
+        let totalTimeForMode = 0;
 
         function setMode(mode) {
             clearInterval(timerInterval);
             isRunning = false;
             currentMode = mode;
-            timeLeft = modes[mode];
-            document.getElementById('startBtn').innerText = "START";
-            updateClock();
+            timeLeft = state.settings[mode] * 60;
+            totalTimeForMode = timeLeft;
+            
+            document.getElementById('startBtn').innerHTML = "▶ START";
+            document.getElementById('startBtn').style.color = "var(--clay-green)";
+            updateClockUI();
+        }
+
+        function updateClockUI() {
+            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            let s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = m;
+            document.getElementById('seconds').innerText = s;
+            
+            // Progress Bar & Title sync
+            let percent = ((totalTimeForMode - timeLeft) / totalTimeForMode) * 100;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.title = isRunning ? `(${m}:${s}) Focus` : "Zenith OS";
         }
 
         function toggleTimer() {
+            const btn = document.getElementById('startBtn');
             if (isRunning) {
                 clearInterval(timerInterval);
-                document.getElementById('startBtn').innerText = "RESUME";
+                btn.innerHTML = "▶ RESUME";
+                btn.style.color = "var(--clay-green)";
             } else {
-                document.getElementById('startBtn').innerText = "PAUSE";
+                btn.innerHTML = "⏸ PAUSE";
+                btn.style.color = "var(--clay-yellow)";
                 timerInterval = setInterval(() => {
                     timeLeft--;
-                    updateClock();
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        alert("Session Complete!");
-                        if(currentMode === 'pomo') logSession();
-                        resetTimer();
-                    }
+                    updateClockUI();
+                    if (timeLeft <= 0) handleTimerComplete();
                 }, 1000);
             }
             isRunning = !isRunning;
         }
 
-        function resetTimer() {
-            setMode(currentMode);
-        }
+        function skipTimer() { if(confirm("Skip this phase?")) handleTimerComplete(true); }
 
-        // --- DATA & STREAK LOGIC ---
-        function logSession() {
-            const today = new Date().toISOString().split('T')[0];
+        function handleTimerComplete(skipped = false) {
+            clearInterval(timerInterval);
+            playNativeBeep();
             
-            // Streak Calculation
-            if (state.lastActiveDate !== today) {
-                let yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                let yestStr = yesterday.toISOString().split('T')[0];
-
-                if (state.lastActiveDate === yestStr) {
-                    state.streak++;
-                } else {
-                    state.streak = 1;
-                }
-                state.lastActiveDate = today;
+            if (!skipped && currentMode === 'pomo') {
+                logSession();
+                sendNotification("Focus Complete!", "Time for a break.");
+            } else if (!skipped) {
+                sendNotification("Break Over", "Let's get back to work.");
             }
 
-            // Session Count
-            state.totalSessions++;
-            state.history[today] = (state.history[today] || 0) + 1;
-            saveState();
-        }
-
-        function renderStats() {
-            document.getElementById('streakCount').innerText = state.streak;
-            document.getElementById('totalSessions').innerText = state.totalSessions;
-
-            // Generate 14 day calendar heat map
-            const cal = document.getElementById('calendarGrid');
-            cal.innerHTML = '';
-            for(let i = 13; i >= 0; i--) {
-                let d = new Date();
-                d.setDate(d.getDate() - i);
-                let dStr = d.toISOString().split('T')[0];
-                
-                let dayDiv = document.createElement('div');
-                dayDiv.className = 'cal-day';
-                if(state.history[dStr]) dayDiv.classList.add('active');
-                dayDiv.innerText = d.getDate();
-                cal.appendChild(dayDiv);
+            // Auto progression logic
+            if (currentMode === 'pomo') {
+                // Every 4th session is a long break
+                let isLong = (state.totalSessions % 4 === 0) && state.totalSessions > 0;
+                setMode(isLong ? 'long' : 'short');
+            } else {
+                setMode('pomo');
             }
+
+            if(state.settings.autoStart) toggleTimer();
         }
 
-        // --- TASK LOGIC ---
+        // Audio & Notifications
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playNativeBeep() {
+            let osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function requestNotifications() {
+            if ("Notification" in window) Notification.requestPermission().then(p => {
+                if(p === 'granted') alert("Notifications enabled!");
+            });
+        }
+
+        function sendNotification(title, body) {
+            if (Notification.permission === 'granted') new Notification(title, { body });
+        }
+
+        // --- 6. TASKS CRUD ENGINE ---
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const prio = document.getElementById('taskPriority').value;
+            if(!input.value.trim()) return;
+            state.tasks.push({ id: Date.now(), text: input.value, done: false, priority: prio });
+            input.value = '';
+            saveState(); renderTasks();
+        }
+
+        function toggleTask(id) {
+            let t = state.tasks.find(x => x.id === id);
+            if(t) { t.done = !t.done; saveState(); renderTasks(); }
+        }
+
+        function deleteTask(id) {
+            state.tasks = state.tasks.filter(x => x.id !== id);
+            saveState(); renderTasks();
+        }
+
+        function clearCompletedTasks() {
+            state.tasks = state.tasks.filter(x => !x.done);
+            saveState(); renderTasks();
+        }
+
         function renderTasks() {
             const list = document.getElementById('taskList');
             list.innerHTML = '';
-            const colors = ['red', 'blue', 'purple'];
+            let pending = 0;
             
-            state.tasks.forEach((t, index) => {
+            state.tasks.forEach(t => {
+                if(!t.done) pending++;
                 let card = document.createElement('div');
-                let colorClass = colors[index % colors.length];
-                card.className = `clay-card ${colorClass}`;
-                card.style.display = 'flex';
-                card.style.justifyContent = 'space-between';
-                card.style.alignItems = 'center';
-                
+                card.className = `clay-card ${t.priority}`;
+                card.style.display = 'flex'; card.style.justifyContent = 'space-between'; card.style.alignItems = 'center';
                 card.innerHTML = `
-                    <span style="${t.done ? 'text-decoration: line-through; opacity: 0.7;' : ''} font-weight: bold; font-size: 1.2rem;">${t.text}</span>
-                    <div>
-                        <button class="glass-btn" style="padding: 5px 10px;" onclick="toggleTask(${index})">✔</button>
-                        <button class="glass-btn" style="padding: 5px 10px;" onclick="deleteTask(${index})">✖</button>
+                    <span style="${t.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${t.text}</span>
+                    <div style="display:flex; gap:10px;">
+                        <button class="liquid-btn" style="padding: 8px;" onclick="toggleTask(${t.id})">✔</button>
+                        <button class="liquid-btn" style="padding: 8px; color: var(--clay-red);" onclick="deleteTask(${t.id})">✖</button>
                     </div>
                 `;
                 list.appendChild(card);
             });
+            
+            // Session Estimator
+            let estTime = pending * state.settings.pomo;
+            let hrs = Math.floor(estTime / 60); let mins = estTime % 60;
+            document.getElementById('taskEstimator').innerText = `Estimated focus time required: ${hrs}h ${mins}m`;
         }
 
-        function addTask() {
-            const input = document.getElementById('taskInput');
-            if(input.value.trim() === '') return;
-            state.tasks.push({ text: input.value, done: false });
-            saveState();
-            input.value = '';
-            renderTasks();
+        // --- 7. DATA, STATS & STREAKS ---
+        function logSession() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Streak Logic
+            if (state.lastActiveDate !== today) {
+                let yest = new Date(); yest.setDate(yest.getDate() - 1);
+                let yestStr = yest.toISOString().split('T')[0];
+                state.streak = (state.lastActiveDate === yestStr) ? state.streak + 1 : 1;
+                state.lastActiveDate = today;
+            }
+
+            state.totalSessions++;
+            state.history[today] = (state.history[today] || 0) + 1;
+            saveState(); updateStatsUI();
         }
 
-        function toggleTask(index) {
-            state.tasks[index].done = !state.tasks[index].done;
-            saveState();
-            renderTasks();
+        function updateStatsUI() {
+            document.getElementById('streakCount').innerText = state.streak;
+            document.getElementById('totalSessions').innerText = state.totalSessions;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todaySessions = state.history[today] || 0;
+            document.getElementById('dailyGoalText').innerText = `${todaySessions}/${state.settings.goal} Today`;
+
+            // Badges
+            const badges = document.getElementById('badgeContainer');
+            badges.innerHTML = '';
+            if(state.totalSessions >= 1) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-yellow)">🥉 First Focus</div>`;
+            if(state.totalSessions >= 10) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-blue)">🥈 10 Sessions</div>`;
+            if(state.streak >= 3) badges.innerHTML += `<div class="neu-btn" style="color:var(--clay-red)">🔥 3-Day Streak</div>`;
+            if(badges.innerHTML === '') badges.innerHTML = `<span style="color:var(--text-muted)">Complete sessions to earn badges.</span>`;
         }
 
-        function deleteTask(index) {
-            state.tasks.splice(index, 1);
-            saveState();
-            renderTasks();
+        // Export / Import
+        function exportData() {
+            const blob = new Blob([JSON.stringify(state)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `zenith_backup_${new Date().getTime()}.json`;
+            a.click();
         }
 
-        // --- YOUTUBE LOGIC ---
-        function loadVideo() {
-            const id = document.getElementById('ytId').value || 'jfKfPfyJRdk'; // Default Lofi Girl
+        function importData(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    state = JSON.parse(event.target.result);
+                    saveState(); alert("Data restored successfully!"); location.reload();
+                } catch(err) { alert("Invalid backup file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- 8. MULTIMEDIA (YOUTUBE & OFFLINE NOISE) ---
+        function loadVideo(id) {
+            if(!id) return;
             document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
         }
 
-        // Init
-        renderTasks();
+        let noiseNodes = {};
+        function toggleNoise(type) {
+            const btn = document.getElementById(type === 'rain' ? 'btnRain' : 'btnBrown');
+            if (noiseNodes[type]) {
+                noiseNodes[type].stop(); delete noiseNodes[type];
+                btn.innerText = "Play"; btn.style.background = "";
+            } else {
+                let bufferSize = 2 * audioCtx.sampleRate, noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2.0 - 1.0;
+                
+                let node = audioCtx.createBufferSource(); node.buffer = noiseBuffer; node.loop = true;
+                let filter = audioCtx.createBiquadFilter();
+                filter.type = type === 'rain' ? 'highpass' : 'lowpass';
+                filter.frequency.value = type === 'rain' ? 1000 : 400;
+                
+                let gain = audioCtx.createGain(); gain.gain.value = 0.1;
+                node.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+                node.start(); noiseNodes[type] = node;
+                btn.innerText = "Stop"; btn.style.background = "var(--clay-red)";
+            }
+        }
+
+        // --- 9. KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
+            if (e.code === 'KeyS') skipTimer();
+        });
     </script>
 </body>
 </html>
